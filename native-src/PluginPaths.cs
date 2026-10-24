@@ -81,6 +81,14 @@ public static class PluginPaths
         foreach (var skin in PetSkins.All)
         {
             string target = QuotesFile(skin.Id);
+            string? previousDefault = skin.Id switch
+            {
+                "whale" => "F61D0E98AE1688B70051362A5CDF9CB7FDB18B88388B34F461218CFF37638942",
+                "mutsumi" => "D875E1FE048746F79AC4F7471B00D42EBFC3F74BF44DC11D4E2DEA072E22D40A",
+                "dragon" => "793AF03C77BF1EA5C03BAC77BAE4F634FCAC42A725A41BF7B97C284E58ED8CDC",
+                _ => null
+            };
+            if (File.Exists(target) && previousDefault == QuoteHash(target)) File.Copy(BundledQuotesFile(skin.Id), target, true);
             if (!File.Exists(target))
             {
                 if (legacyCustomized) File.Copy(legacyFile, target, false);
@@ -90,6 +98,16 @@ public static class PluginPaths
             if (!File.ReadLines(target).Select(line => line.Trim()).Any(line => line.StartsWith("区", StringComparison.Ordinal)))
                 File.AppendAllText(target, Environment.NewLine + "区…" + Environment.NewLine);
         }
+    }
+    private static string? QuoteHash(string file)
+    {
+        try
+        {
+            string content = string.Join("\n", File.ReadLines(file).Select(line => line.Trim()).Where(line => line.Length != 0 && !line.StartsWith('#')));
+            return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(content)));
+        }
+        catch (IOException) { return null; }
+        catch (UnauthorizedAccessException) { return null; }
     }
     private static bool SameQuotesExceptRequired(string first, string second)
     {
