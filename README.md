@@ -9,7 +9,7 @@ Windows x64额度伙伴，保留原版鲸鱼娘设计，另有若叶睦和GPT娘
 
 ## 安装
 
-从[桌面版Releases](https://github.com/BakonZHOU/gpt-pet/releases/tag/desktop-v1.2.1)下载Windows ZIP，完整解压后双击 `安装.cmd`。自带.NET运行时，无需管理员权限。
+从[桌面版Releases](https://github.com/BakonZHOU/gpt-pet/releases/tag/desktop-v1.2.2)下载Windows ZIP，完整解压后双击 `安装.cmd`。自带.NET运行时，无需管理员权限。
 
 安装后支持随GPT桌面客户端自动开关，Windows“设置 → 应用 → 已安装的应用”中可卸载。也可双击 `直接启动.cmd` 免安装运行。
 

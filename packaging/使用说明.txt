@@ -1,4 +1,4 @@
-鲸鱼娘桌宠 1.2.1 · Windows x64
+鲸鱼娘桌宠 1.2.2 · Windows x64
 
 安装：完整解压后双击“安装.cmd”，无需管理员权限，也无需安装.NET。
 安装到当前用户的 %LOCALAPPDATA%\Programs\CodexWhalePet，创建桌面快捷方式。

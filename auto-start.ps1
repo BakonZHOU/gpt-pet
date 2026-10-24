@@ -10,13 +10,15 @@ if ($Disable) {
 }
 if (!(Test-Path -LiteralPath $petExe)) { throw '请先运行 build.ps1。' }
 $petShell = New-Object -ComObject WScript.Shell
-$petShortcut = $petShell.CreateShortcut($petStartup)
+$petTemporaryShortcut = Join-Path $env:TEMP ('CodexWhalePet-' + [Guid]::NewGuid().ToString('N') + '.lnk')
+$petShortcut = $petShell.CreateShortcut($petTemporaryShortcut)
 $petShortcut.TargetPath = $petExe
 $petShortcut.Arguments = '--watch-gpt'
 $petShortcut.WorkingDirectory = Split-Path -Parent $petExe
 $petShortcut.WindowStyle = 7
 $petShortcut.Description = '检测GPT桌面程序，自动开关鲸鱼娘；不调用模型。'
 $petShortcut.Save()
+Move-Item -LiteralPath $petTemporaryShortcut -Destination $petStartup -Force
 Start-Process -FilePath $petExe -ArgumentList '--watch-gpt' -WindowStyle Hidden
 Write-Host '已开启随GPT自动开关。'
 

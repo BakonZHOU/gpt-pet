@@ -19,12 +19,23 @@ function Stop-Pet {
 }
 function Set-PetShortcut([string]$ShortcutPath, [string]$Arguments) {
     $petShell = New-Object -ComObject WScript.Shell
-    $petLink = $petShell.CreateShortcut($ShortcutPath)
-    $petLink.TargetPath = $petExe
-    $petLink.Arguments = $Arguments
-    $petLink.WorkingDirectory = $petDestination
-    $petLink.WindowStyle = 7
-    $petLink.Save()
+    $petTempLink = Join-Path $env:TEMP ('CodexWhalePet-' + [Guid]::NewGuid().ToString('N') + '.lnk')
+    try {
+        $petLink = $petShell.CreateShortcut($petTempLink)
+        $petLink.TargetPath = $petExe
+        $petLink.Arguments = $Arguments
+        $petLink.WorkingDirectory = $petDestination
+        $petLink.WindowStyle = 7
+        $petLink.Save()
+        Move-Item -LiteralPath $petTempLink -Destination $ShortcutPath -Force
+    } finally { if (Test-Path -LiteralPath $petTempLink) { Remove-Item -LiteralPath $petTempLink } }
+}
+function Get-PetShortcutTarget([string]$ShortcutPath) {
+    $petTempLink = Join-Path $env:TEMP ('CodexWhalePet-' + [Guid]::NewGuid().ToString('N') + '.lnk')
+    try {
+        Copy-Item -LiteralPath $ShortcutPath -Destination $petTempLink
+        return (New-Object -ComObject WScript.Shell).CreateShortcut($petTempLink).TargetPath
+    } finally { if (Test-Path -LiteralPath $petTempLink) { Remove-Item -LiteralPath $petTempLink } }
 }
 function Register-PetUninstaller {
     $petVersion = (Get-Content -LiteralPath (Join-Path $petDestination 'version.txt') -Raw).Trim()
@@ -52,8 +63,7 @@ if ($Action -eq 'Uninstall') {
     Stop-Pet
     foreach ($petShortcut in @($petStartup, $petDesktop)) {
         if (Test-Path -LiteralPath $petShortcut) {
-            $petLink = (New-Object -ComObject WScript.Shell).CreateShortcut($petShortcut)
-            if ($petLink.TargetPath -eq $petExe) { Remove-Item -LiteralPath $petShortcut }
+            if ((Get-PetShortcutTarget $petShortcut) -eq $petExe) { Remove-Item -LiteralPath $petShortcut }
         }
     }
     # Delete only this fixed, per-user application directory. Keep user preferences.
@@ -67,8 +77,7 @@ if ($Action -eq 'Uninstall') {
 }
 if ($Action -eq 'Disable') {
     if (Test-Path -LiteralPath $petStartup) {
-        $petLink = (New-Object -ComObject WScript.Shell).CreateShortcut($petStartup)
-        if ($petLink.TargetPath -eq $petExe) { Remove-Item -LiteralPath $petStartup }
+        if ((Get-PetShortcutTarget $petStartup) -eq $petExe) { Remove-Item -LiteralPath $petStartup }
     }
     if (Test-Path -LiteralPath $petExe) { Start-Process -FilePath $petExe -ArgumentList '--stop-watch' -WindowStyle Hidden -Wait }
     Write-Host '已关闭自动联动，仍可从桌面快捷方式手动打开。'
