@@ -1,0 +1,9 @@
+**/bin/
+**/obj/
+dist/
+release/
+work/
+*.user
+.env
+auth.json
+settings.json

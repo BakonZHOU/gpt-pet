@@ -1,0 +1,21 @@
+name: Build desktop
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet run --project tests/CodexPet.Tests.csproj -c Release
+      - shell: pwsh
+        run: ./tests/package-smoke.ps1
+      - shell: pwsh
+        run: ./package.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-windows-x64
+          path: |
+            release/*.zip
+            release/*.sha256
