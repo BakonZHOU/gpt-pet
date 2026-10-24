@@ -1,6 +1,6 @@
 {
   "name": "codex-pet-app",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "Quota companion inside GPT via MCP Apps",
   "license": "MIT",

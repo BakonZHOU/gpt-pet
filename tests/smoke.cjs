@@ -6,6 +6,18 @@ const {parse,ALLOWED,QuotaClient}=require(path.join(ROOT,'quota.cjs'));
 let passed=0;function check(value,label){assert(value,label);console.log('PASS '+label);passed++;}
 (async()=>{
  const {Drops,nextClick,fitPet}=await import(require('node:url').pathToFileURL(path.join(ROOT,'core.mjs')).href);
+ const {SoundPlayer}=await import(require('node:url').pathToFileURL(path.join(ROOT,'audio.mjs')).href);
+ let resumed=0,decoded=0,started=0;
+ const audioContext={state:'suspended',destination:{},resume(){resumed++;this.state='running';return Promise.resolve();},decodeAudioData(){decoded++;return Promise.resolve({});},createBufferSource(){return{connect(){},disconnect(){},start(){started++;},stop(){}};},createGain(){return{gain:{value:0},connect(){},disconnect(){}};}};
+ const player=new SoundPlayer({clip:'data:audio/mpeg;base64,AQID'},()=>audioContext);
+ await player.play('clip',.9);await player.play('clip',.5);
+ check(resumed===1&&decoded===1&&started===2,'Audio resumes on interaction and reuses decoded clips for repeat clicks');
+ audioContext.state='suspended';audioContext.resume=()=>Promise.reject(Error('blocked'));
+ await assert.rejects(()=>player.play('clip',1),/blocked/);
+ check(started===2,'Host audio denial is reported instead of silently pretending to play');
+ let finishDecode;audioContext.state='running';audioContext.decodeAudioData=()=>new Promise(r=>finishDecode=r);
+ const pendingPlayer=new SoundPlayer({clip:'data:audio/mpeg;base64,AQID'},()=>audioContext),pendingSound=pendingPlayer.play('clip',1);pendingPlayer.stop();finishDecode({});
+ check(await pendingSound===false&&started===2,'Hiding the pet cancels sound still being decoded');
  for(const [w,h] of [[1280,800],[568,310],[280,200],[140,95]]){const b=fitPet(w,h,2.5,1200,700);check(b.left>=0&&b.top>=0&&b.left+b.size<=w&&b.top+b.size<=h,'Responsive pet stays completely inside '+w+'x'+h+' viewport');}
  const input={rateLimitsByLimitId:{codex:{primary:{usedPercent:26,windowDurationMins:10080,resetsAt:1793087603},secondary:{usedPercent:24,windowDurationMins:300,resetsAt:1792594903}}},rateLimitResetCredits:{availableCount:2}};
  const q=parse(input);check(q.fiveHour.remaining===76&&q.weekly.remaining===74&&q.resetCount===2,'Same quota pool, duration mapping and reset counts as desktop version');

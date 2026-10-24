@@ -24,7 +24,7 @@ tool('pet_refresh','刷新额度','主动刷新5小时和每周额度，不消�
 tool('pet_pause','暂停读取','面板隐藏后暂停读取。',{type:'object',properties:{clientId:{type:'string'}},required:['clientId'],additionalProperties:false}),
 tool('pet_update','保存皮肤与语录','只保存本插件的本地偏好。',{type:'object',properties:{settings:{type:'object'},quotes:{type:'array',items:{type:'string'},maxItems:100}},additionalProperties:false})];
 async function handle(method,params={}){
- if(method==='initialize')return{protocolVersion:params.protocolVersion??'2025-06-18',serverInfo:{name:'codex-pet-app',version:'0.2.1'},capabilities:{tools:{},resources:{}}};
+ if(method==='initialize')return{protocolVersion:params.protocolVersion??'2025-06-18',serverInfo:{name:'codex-pet-app',version:'0.2.2'},capabilities:{tools:{},resources:{}}};
  if(method==='ping')return{};if(method==='tools/list')return{tools};if(method==='resources/templates/list')return{resourceTemplates:[]};if(method==='resources/list')return{resources:[{uri:URI,name:'额度伙伴',mimeType:'text/html;profile=mcp-app'}]};
  if(method==='resources/read'&&params.uri===URI)return{contents:[{uri:URI,mimeType:'text/html;profile=mcp-app',text:html(),_meta:{ui:{prefersBorder:false,csp:{connectDomains:[],resourceDomains:[]}},'openai/ui':{availableDisplayModes:['inline','fullscreen','pip']}}}]};
  if(method!=='tools/call')throw Error('不支持的方法');const a=params.arguments??{};

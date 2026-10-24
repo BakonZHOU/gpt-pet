@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-pet-app",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "在GPT面板内运行的额度伙伴：三套皮肤、主题气泡、额度提醒与可编辑语录。",
   "license": "MIT",
   "extensions": {

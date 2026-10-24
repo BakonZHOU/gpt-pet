@@ -1,11 +1,13 @@
 import {App} from '@modelcontextprotocol/ext-apps';
 import {Drops,nextClick,percent,resetText,fitPet} from './core.mjs';
+import {SoundPlayer} from './audio.mjs';
 const $=id=>document.getElementById(id), A=window.PET_ASSETS, drops=new Drops();
 const skins={whale:{body:'DSniang1-no-ahoge.png',hair:'DSniang1.png',bodyPath:'M0 0H610V610H0Z',rect:[237,10,170,60],pivot:[407,71],colors:['#536ba9','#203170','#9fb0d9','#ffffff']},
  mutsumi:{body:'Skins/Mutsumi.png',hair:'Skins/Mutsumi.png',bodyPath:'M0 110H610V603H0Z',rect:[0,0,610,110],pivot:[364,110],colors:['#556b57','#304b3a','#8a9b86','#f5f8ef']},
  dragon:{body:'Skins/WhiteDragon.png',hair:'Skins/WhiteDragon.png',bodyPath:'M0 0H610V603H0Z M232 0V110H403V0Z',rect:[232,0,171,110],pivot:[371,110],colors:['#77668f','#534264','#a59ab8','#f8f3fc']}};
 let prefs={skin:'dragon',scale:.8,bubbles:true,animate:true,quoteChance:.15,breatheSeconds:4.4,breatheAmplitude:1,ahogeSeconds:2.8,ahogeAmplitude:1,sound:true,volume:.9,soundSet:'duck',topmost:true,left:null,top:null},quota=null,quotes=[],stage='hidden',weekly=false,closeTimer=null,alertTimer=null,alerts=[],hidden=false,offline=false,fetching=false,callTool=null,app=null;
 const clientId=crypto.randomUUID();
+const sounds=new SoundPlayer(A);let hostModes=[],hostMode='fullscreen';
 const sliderRows=[['scale','大小',.6,2.5,.1],['breatheSeconds','呼吸速度',.1,6,.1],['breatheAmplitude','呼吸幅度',0,4,.05],['ahogeSeconds','呆毛速度',.1,6,.1],['ahogeAmplitude','呆毛幅度',0,4,.05],['volume','音量',0,1,.05],['quoteChance','语录概率',0,1,.05]];
 for(const [key,title,min,max,step] of sliderRows){const row=document.createElement('label');row.className='row';row.innerHTML=`<span>${title}</span><input id="${key}" type="range" min="${min}" max="${max}" step="${step}"><output id="${key}-value"></output>`;$(key==='volume'?'volume-slot':key==='quoteChance'?'quote-slot':'sliders').append(row);$(key).oninput=()=>{prefs[key]=+$(key).value;applyPrefs();};$(key).onchange=()=>save({[key]:prefs[key]});}
 function applyPrefs(){
@@ -40,8 +42,9 @@ $('character').onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.
 $('character').onpointerup=()=>{if(!drag)return;drag=null;$('character').classList.remove('pressed');play(false);if(moved){const x=parseFloat($('pet').style.left),b=$('board');if(x<28)prefs.left=0;else if(b.clientWidth-x-$('pet').offsetWidth<28)prefs.left=b.clientWidth-$('pet').offsetWidth;place();save({left:prefs.left,top:prefs.top});}else click();};
 $('character').onpointercancel=()=>{drag=null;$('character').classList.remove('pressed');};
 $('character').onlostpointercapture=()=>{drag=null;$('character').classList.remove('pressed');};
-function play(down){if(!prefs.sound||!prefs.volume)return;const file=prefs.soundSet==='fx1'?(down?'D1.mp3':'D2.mp3'):(down?'Ya1.mp3':'Ya2.mp3');const audio=new Audio(A[file]);audio.volume=prefs.volume;audio.play().catch(()=>{});}
-$('character').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click();}};
+function play(down){if(!prefs.sound||!prefs.volume)return;const file=prefs.soundSet==='fx1'?(down?'D1.mp3':'D2.mp3'):(down?'Ya1.mp3':'Ya2.mp3');$('character').dataset.audioState='pending';sounds.play(file,prefs.volume).then(()=>{$('character').dataset.audioState='played';$('audio-status').hidden=true;}).catch(()=>{$('character').dataset.audioState='blocked';$('audio-status').hidden=false;$('audio-status').textContent='音效未播放：请检查GPT是否静音，再点击人物重试';});}
+$('character').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat){e.preventDefault();play(true);click();}};
+$('character').onkeyup=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();play(false);}};
 $('bubble').onclick=click;$('bubble').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click();}};
 $('character').oncontextmenu=e=>{e.preventDefault();$('settings').hidden=false;positionMenu();};
 document.addEventListener('pointerdown',e=>{if(!$('settings').hidden&&!$('settings').contains(e.target))$('settings').hidden=true;});document.addEventListener('keydown',e=>{if(e.key==='Escape')$('settings').hidden=true;});
@@ -49,14 +52,16 @@ for(const key of ['skin','soundSet','bubbles'])$(key).onchange=()=>{prefs[key]=k
 $('edit-quotes').onclick=()=>{$('settings').hidden=true;$('quote-editor').showModal();};$('cancel-quotes').onclick=()=>{$('quotes').value=quotes.join('\n');$('quote-editor').close();};
 $('save-quotes').onclick=async()=>{const lines=$('quotes').value.split(/\r?\n/).map(s=>s.trim()).filter(s=>s&&!s.startsWith('#'));if(lines.length>100||lines.some(s=>s.length>300)){$('quote-error').textContent='最多100条，每条不超过300字';return;}if(await save(null,lines)){quotes=lines;$('quote-error').textContent='';$('quote-editor').close();}else $('quote-error').textContent='保存失败，请重试';};
 $('reset').onclick=()=>{stopAlerts();stage='second';$('words').className='quote';lines('下次重置',resetText(quota?.fiveHour),'每周 '+(quota?.weekly?.resetsAt?new Date(quota.weekly.resetsAt).toLocaleString('zh-CN'):'--'));applyPrefs();openBubble();$('settings').hidden=true;};
-function hide(){hidden=true;hideBubble();stopAlerts();drops.reset();$('pet').hidden=true;$('empty').hidden=false;$('show').hidden=false;$('empty-message').textContent='';$('settings').hidden=true;callTool?.('pet_pause',{clientId}).catch(()=>{});}
+function hide(){hidden=true;sounds.stop();hideBubble();stopAlerts();drops.reset();$('pet').hidden=true;$('empty').hidden=false;$('show').hidden=false;$('empty-message').textContent='';$('settings').hidden=true;callTool?.('pet_pause',{clientId}).catch(()=>{});}
 $('hide').onclick=hide;
+function syncDisplay(context=app?.getHostContext?.()??{}){hostModes=context.availableDisplayModes??window.openai?.availableDisplayModes??[];hostMode=context.displayMode??window.openai?.displayMode??hostMode;$('pip').hidden=!hostModes.includes('pip')&&!window.openai?.requestDisplayMode;$('pip').textContent=hostMode==='pip'?'返回面板':'悬浮显示（画中画）';place();}
+$('pip').onclick=async()=>{const mode=hostMode==='pip'?'fullscreen':'pip';try{const result=app?await app.requestDisplayMode({mode}):await window.openai.requestDisplayMode({mode});if(result?.mode!==mode){$('status').textContent='当前GPT不支持此显示模式';return;}hostMode=result.mode;$('settings').hidden=true;syncDisplay({...app?.getHostContext?.(),displayMode:hostMode});}catch{$('status').textContent='当前GPT无法切换画中画';}};
 $('exit').onclick=()=>{hide();if(window.openai?.requestClose)window.openai.requestClose();else{$('show').hidden=true;$('empty-message').textContent='已退出，重新打开插件即可恢复。';}};
 $('show').onclick=()=>{hidden=false;$('pet').hidden=false;$('empty').hidden=true;$('show').hidden=true;refresh(true);};
-document.addEventListener('visibilitychange',()=>{if(document.hidden){drops.reset();stopAlerts();callTool?.('pet_pause',{clientId}).catch(()=>{});}else refresh(false);});window.addEventListener('pagehide',()=>callTool?.('pet_pause',{clientId}).catch(()=>{}));new ResizeObserver(()=>applyPrefs()).observe($('board'));
+document.addEventListener('visibilitychange',()=>{if(document.hidden){sounds.stop();drops.reset();stopAlerts();callTool?.('pet_pause',{clientId}).catch(()=>{});}else refresh(false);});window.addEventListener('pagehide',()=>{sounds.stop();callTool?.('pet_pause',{clientId}).catch(()=>{});});new ResizeObserver(()=>applyPrefs()).observe($('board'));
 async function connect(){
- if(window.parent!==window){try{app=new App({name:'quota-companion',version:'0.2.1'},{},{autoResize:false});app.ontoolresult=r=>consume(r);await app.connect();callTool=(name,args)=>app.callServerTool({name,arguments:args});}catch{if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);}}
+ if(window.parent!==window){try{app=new App({name:'quota-companion',version:'0.2.2'},{},{autoResize:false});app.ontoolresult=r=>consume(r);app.onhostcontextchanged=context=>syncDisplay({...app.getHostContext(),...context});await app.connect();callTool=(name,args)=>app.callServerTool({name,arguments:args});}catch{app=null;if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);}}
  else if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);
- if(!callTool){$('status').textContent='请从GPT的插件入口打开';return;}await refresh(false,true);setInterval(()=>refresh(false),3000);
+ if(!callTool){$('status').textContent='请从GPT的插件入口打开';return;}syncDisplay();await refresh(false,true);setInterval(()=>refresh(false),3000);
 }
 applyPrefs();connect();
