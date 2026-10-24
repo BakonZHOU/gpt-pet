@@ -1,4 +1,4 @@
-# 额度伙伴 · 插件浮窗 v0.3.5
+# 额度伙伴 · 插件浮窗 v0.3.6
 
 Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装器、Node或另行安装.NET。GPT加载启用插件的MCP服务时启动桌面浮窗；不需要打开“额度伙伴”面板。
 
@@ -37,7 +37,7 @@ codex plugin add codex-pet-app@bakon-gpt-pet
 
 然后重开 GPT。也可以只执行第一条命令，重开 GPT 后在“插件目录”选择 `Bakon GPT Pet` 来源，安装并启用“额度伙伴 · 插件浮窗”。这属于官方支持的 Git 市场安装方式，不需要桌面软件安装器。更新时执行 `codex plugin marketplace upgrade bakon-gpt-pet`，再在插件目录更新；如果宿主尚未重载，重开 GPT。
 
-开发者在Windows x64运行 `./build.ps1`，然后使用生成的 `artifacts/plugin-0.3.5` 安装测试。`./package.ps1 -ReuseBuild` 生成ZIP，plugin.json直接位于ZIP根目录。接收者无需运行独立软件安装器。
+开发者在Windows x64运行 `./build.ps1`，然后使用生成的 `artifacts/plugin-0.3.6` 安装测试。`./package.ps1 -ReuseBuild` 生成ZIP，plugin.json直接位于ZIP根目录。接收者无需运行独立软件安装器。
 
 启用开关保存加载许可，启动动作发生在GPT初始化插件服务时；客户端若尚未重新加载插件目录，需刷新插件或重开GPT。公开目录不支持通过随包Hook绕过宿主加载机制。
 
