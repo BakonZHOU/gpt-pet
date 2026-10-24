@@ -19,6 +19,11 @@ public static class PluginMcp
         try
         {
             if (explicitShow) PluginPaths.ClearSuppression();
+            if (Running() && RunningVersion() is { } runningVersion && runningVersion < typeof(PluginMcp).Assembly.GetName().Version)
+            {
+                ControlPipe.Send("quit");
+                for (int attempt = 0; attempt < 60 && Running(); attempt++) Thread.Sleep(50);
+            }
             if (Running()) return !explicitShow || ControlPipe.Send("show");
             if (!explicitShow && PluginPaths.Suppressed()) return false;
             PluginPaths.PrepareUserFiles();
@@ -50,6 +55,18 @@ public static class PluginMcp
         }
         finally { gate.ReleaseMutex(); }
     }
+    private static Version? RunningVersion()
+    {
+        try
+        {
+            int id = int.Parse(File.ReadAllText(Path.Combine(PluginPaths.Data, "window.pid")));
+            using var process = Process.GetProcessById(id);
+            string? file = process.MainModule?.FileName;
+            string prefix = Path.Combine(PluginPaths.Data, "runtime") + Path.DirectorySeparatorChar;
+            return file is not null && file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && Version.TryParse(FileVersionInfo.GetVersionInfo(file).FileVersion, out var version) ? version : null;
+        }
+        catch (Exception e) when (e is IOException or ArgumentException or FormatException or InvalidOperationException or System.ComponentModel.Win32Exception) { return null; }
+    }
     public static int Run()
     {
         string? line;
@@ -67,7 +84,7 @@ public static class PluginMcp
                 if (method == "initialize")
                 {
                     bool launched = EnsureRunning(false);
-                    result = new { protocolVersion = request.GetProperty("params").GetProperty("protocolVersion").GetString(), serverInfo = new { name = "codex-pet-plugin", version = "0.3.2" }, capabilities = new { tools = new { } } };
+                    result = new { protocolVersion = request.GetProperty("params").GetProperty("protocolVersion").GetString(), serverInfo = new { name = "codex-pet-plugin", version = "0.3.3" }, capabilities = new { tools = new { } } };
                 }
                 else if (method == "ping") result = new { };
                 else if (method == "tools/list") result = new { tools = new object[] {

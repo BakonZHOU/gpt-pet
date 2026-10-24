@@ -629,8 +629,8 @@ public sealed class PetWindow : Window
         MoveForTaskbar(new(0, 900, 898), 0);
         Check(Top == 650, "First fully hidden sample does not drop the pet prematurely");
         MoveForTaskbar(new(0, 900, 898), 0);
-        Check((double)GetAnimationBaseValue(TopProperty) == 698 && HasAnimatedProperties,
-            "Second fully hidden sample starts one accelerating fall");
+        Check((double)GetAnimationBaseValue(TopProperty) == 698 && HasAnimatedProperties == (settings.Animate && SystemParameters.ClientAreaAnimation),
+            "Second fully hidden sample falls while respecting the system animation preference");
         await Task.Delay(400);
         Check(Math.Abs(Top - 698) < .1 && Left == savedLeft, "Fall lands exactly at original height without horizontal movement");
         BeginAnimation(TopProperty, null); Top = savedTop; taskbarTarget = null; taskbarClearSamples = 0;

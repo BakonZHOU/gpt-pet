@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-pet-app",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "插件自带的桌面浮窗，免安装器，与独立桌宠软件隔离。",
   "license": "MIT",
   "extensions": {

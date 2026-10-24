@@ -8,7 +8,7 @@
       "name": "codex-pet-app",
       "source": {
         "source": "local",
-        "path": "./artifacts/plugin-0.3.2"
+        "path": "./artifacts/plugin-0.3.3"
       },
       "policy": {
         "installation": "AVAILABLE",
