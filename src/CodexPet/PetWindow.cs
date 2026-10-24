@@ -532,9 +532,9 @@ public sealed class PetWindow : Window
             settings.Scale = v; Width = Height = 250 * v;
             if (!settings.Mirror) Left = right - Width; Top = bottom - Height; KeepVisible(); UpdateMenuSize(); RememberBottomAnchor(); ApplyTaskbar();
         }, v => (Math.Round((v - .6) / .1) + 1).ToString("0"));
-        SliderRow("呼吸速度", 1, 20, settings.BreatheSeconds, .1, v => { settings.BreatheSeconds = v; SetAnimation(); }, v => $"{v:0.0}s");
+        SliderRow("呼吸速度", .1, 6, settings.BreatheSeconds, .1, v => { settings.BreatheSeconds = v; SetAnimation(); }, v => $"{v:0.0}s");
         SliderRow("呼吸幅度", 0, 4, settings.BreatheAmplitude, .05, v => { settings.BreatheAmplitude = v; SetAnimation(); }, v => $"{v * 100:0}%");
-        SliderRow("呆毛速度", .8, 12, settings.AhogeSeconds, .1, v => { settings.AhogeSeconds = v; SetAnimation(); }, v => $"{v:0.0}s");
+        SliderRow("呆毛速度", .1, 6, settings.AhogeSeconds, .1, v => { settings.AhogeSeconds = v; SetAnimation(); }, v => $"{v:0.0}s");
         SliderRow("呆毛幅度", 0, 4, settings.AhogeAmplitude, .05, v => { settings.AhogeAmplitude = v; SetAnimation(); }, v => $"{v * 100:0}%");
         var sounds = new ComboBox { ItemsSource = new[] { "小黄鸭", "音效1" }, SelectedIndex = settings.SoundSet == "fx1" ? 1 : 0, FontSize = 12 };
         sounds.SelectionChanged += (_, _) => { settings.SoundSet = sounds.SelectedIndex == 1 ? "fx1" : "duck"; settings.Save(); };
@@ -570,6 +570,10 @@ public sealed class PetWindow : Window
         var results = new List<string>();
         void Check(bool condition, string name) { if (!condition) throw new InvalidOperationException(name); results.Add("PASS " + name); }
         HideBubble(true);
+        var speedSliders = ((StackPanel)((Border)menu.Child).Child).Children.OfType<DockPanel>()
+            .Where(row => row.Children.OfType<TextBlock>().Any(t => t.Text is "呼吸速度" or "呆毛速度"))
+            .SelectMany(row => row.Children.OfType<Slider>()).ToArray();
+        Check(speedSliders.Length == 2 && speedSliders.All(s => s.Minimum == .1 && s.Maximum == 6), "Breathing and ahoge speed controls both span 0.1 to 6 seconds");
         Check(bubble.Visibility == Visibility.Collapsed && root.Children.Count == 2, "Idle contains only whale and hidden hover menu; no quota card");
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;

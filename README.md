@@ -9,7 +9,7 @@ Windows x64额度伙伴，保留原版鲸鱼娘设计，另有若叶睦和GPT娘
 
 ## 安装
 
-从[桌面版Releases](https://github.com/BakonZHOU/gpt-pet/releases/tag/desktop-v1.2.0)下载Windows ZIP，完整解压后双击 `安装.cmd`。自带.NET运行时，无需管理员权限。
+从[桌面版Releases](https://github.com/BakonZHOU/gpt-pet/releases/tag/desktop-v1.2.1)下载Windows ZIP，完整解压后双击 `安装.cmd`。自带.NET运行时，无需管理员权限。
 
 安装后支持随GPT桌面客户端自动开关，Windows“设置 → 应用 → 已安装的应用”中可卸载。也可双击 `直接启动.cmd` 免安装运行。
 
@@ -45,3 +45,4 @@ dotnet run --project tests/CodexPet.Tests.csproj -c Release
 ## 许可与素材
 
 原版设计和素材：MeteorNOX，MIT，见 `LICENSE.whale-widget`。新增皮肤的生成说明和提示词见 `docs/SKIN-*.txt`。本项目为非官方工具，与OpenAI无隶属关系。
+呼吸和呆毛速度均为0.1–6秒，与应用内版一致。

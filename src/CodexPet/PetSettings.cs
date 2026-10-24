@@ -34,6 +34,8 @@ public sealed class PetSettings
             s.Scale = double.IsFinite(s.Scale) ? Math.Clamp(s.Scale, .6, 2.5) : .8;
             s.QuoteChance = double.IsFinite(s.QuoteChance) ? Math.Clamp(s.QuoteChance, 0, 1) : .15;
             s.Skin = PetSkins.Find(s.Skin).Id;
+            s.BreatheSeconds = double.IsFinite(s.BreatheSeconds) ? Math.Clamp(s.BreatheSeconds, .1, 6) : 4.4;
+            s.AhogeSeconds = double.IsFinite(s.AhogeSeconds) ? Math.Clamp(s.AhogeSeconds, .1, 6) : 2.8;
             if (s.Left.HasValue && !double.IsFinite(s.Left.Value)) s.Left = null;
             if (s.Top.HasValue && !double.IsFinite(s.Top.Value)) s.Top = null;
             if (s.BottomGap is { } gap && (!double.IsFinite(gap) || gap < 0 || gap > 28)) s.BottomGap = null;
