@@ -2,9 +2,9 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),read
 const {QuotaClient}=require('./quota.cjs');
 const ROOT=__dirname, URI='ui://codex-pet-app/main.html';
 const DATA=process.env.CODEX_PET_APP_DATA ?? process.env.PLUGIN_DATA ?? path.join(process.env.LOCALAPPDATA ?? os.homedir(),'CodexPetApp');
-const defaults={skin:'dragon',scale:.8,bubbles:true,animate:true,quoteChance:.15,breatheSeconds:4.4,breatheAmplitude:1,ahogeSeconds:2.8,ahogeAmplitude:1,sound:true,volume:.9,soundSet:'duck',left:null,top:null};
+const defaults={skin:'dragon',scale:.8,bubbles:true,topmost:true,animate:true,quoteChance:.15,breatheSeconds:4.4,breatheAmplitude:1,ahogeSeconds:2.8,ahogeAmplitude:1,sound:true,volume:.9,soundSet:'duck',left:null,top:null};
 const ranges={scale:[.6,2.5],quoteChance:[0,1],breatheSeconds:[.1,6],breatheAmplitude:[0,4],ahogeSeconds:[.1,6],ahogeAmplitude:[0,4],volume:[0,1]};
-function sanitize(input){const p={...defaults};for(const [k,v] of Object.entries(input??{})){if(Object.hasOwn(ranges,k) && typeof v==='number' && Number.isFinite(v))p[k]=Math.max(ranges[k][0],Math.min(ranges[k][1],v));else if(['bubbles','animate','sound'].includes(k)&&typeof v==='boolean')p[k]=v;else if(k==='skin'&&['whale','mutsumi','dragon'].includes(v))p[k]=v;else if(k==='soundSet'&&['duck','fx1'].includes(v))p[k]=v;else if(['left','top'].includes(k)&&(v===null||typeof v==='number'&&Number.isFinite(v)))p[k]=v;}return p;}
+function sanitize(input){const p={...defaults};for(const [k,v] of Object.entries(input??{})){if(Object.hasOwn(ranges,k) && typeof v==='number' && Number.isFinite(v))p[k]=Math.max(ranges[k][0],Math.min(ranges[k][1],v));else if(['bubbles','topmost','animate','sound'].includes(k)&&typeof v==='boolean')p[k]=v;else if(k==='skin'&&['whale','mutsumi','dragon'].includes(v))p[k]=v;else if(k==='soundSet'&&['duck','fx1'].includes(v))p[k]=v;else if(['left','top'].includes(k)&&(v===null||typeof v==='number'&&Number.isFinite(v)))p[k]=v;}return p;}
 let prefs={...defaults},quotes=[];try{prefs=sanitize(JSON.parse(fs.readFileSync(path.join(DATA,'preferences.json'),'utf8')));}catch{
  if(!process.env.CODEX_PET_APP_NO_IMPORT)try{const old=JSON.parse(fs.readFileSync(path.join(process.env.LOCALAPPDATA??os.homedir(),'CodexPet','settings.json'),'utf8').replace(/^\uFEFF/,''));const imported={};for(const key of Object.keys(defaults)){const name=key[0].toUpperCase()+key.slice(1);if(Object.hasOwn(old,name))imported[key]=old[name];}if(typeof old.BubbleOn==='boolean')imported.bubbles=old.BubbleOn;delete imported.left;delete imported.top;prefs=sanitize(imported);}catch{}
 }
@@ -26,7 +26,7 @@ tool('pet_refresh','刷新额度','主动刷新5小时和每周额度，不消�
 tool('pet_pause','暂停读取','面板隐藏后暂停读取。',{type:'object',properties:{clientId:{type:'string'}},required:['clientId'],additionalProperties:false}),
 tool('pet_update','保存皮肤与语录','只保存本插件的本地偏好。',{type:'object',properties:{settings:{type:'object'},quotes:{type:'array',items:{type:'string'},maxItems:100}},additionalProperties:false})];
 async function handle(method,params={}){
- if(method==='initialize')return{protocolVersion:params.protocolVersion??'2025-06-18',serverInfo:{name:'codex-pet-app',version:'0.1.1'},capabilities:{tools:{},resources:{}}};
+ if(method==='initialize')return{protocolVersion:params.protocolVersion??'2025-06-18',serverInfo:{name:'codex-pet-app',version:'0.2.0'},capabilities:{tools:{},resources:{}}};
  if(method==='ping')return{};if(method==='tools/list')return{tools};if(method==='resources/list')return{resources:[{uri:URI,name:'额度伙伴',mimeType:'text/html;profile=mcp-app'}]};
  if(method==='resources/read'&&params.uri===URI)return{contents:[{uri:URI,mimeType:'text/html;profile=mcp-app',text:html(),_meta:{ui:{prefersBorder:false,csp:{connectDomains:[],resourceDomains:[]}},'openai/ui':{availableDisplayModes:['inline','fullscreen','pip']}}}]};
  if(method!=='tools/call')throw Error('不支持的方法');const a=params.arguments??{};

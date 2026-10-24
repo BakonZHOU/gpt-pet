@@ -28,6 +28,11 @@ let passed=0;function check(value,label){assert(value,label);console.log('PASS '
   const resource=(await server.handle('resources/read',{uri:'ui://codex-pet-app/main.html'})).contents[0];
   check(resource.text.includes('data:image/png;base64,')&&resource.text.includes('GPT娘 · 白龙')&&!resource.text.includes('CodexPet.exe'),'App embeds three skins and runs without the standalone pet executable');
   check(!resource.text.includes('sendFollowUpMessage')&&!resource.text.includes('turn/start'),'UI does not submit model chats or inference');
+  const ui=fs.readFileSync(path.join(ROOT,'ui.js'),'utf8'),page=fs.readFileSync(path.join(ROOT,'ui.html'),'utf8');
+  check(ui.includes("$('character').oncontextmenu")&&!page.includes('<header')&&!page.includes('id="refresh"'),'Only character right-click opens settings; no separate control toolbar');
+  check(['edit-quotes','hide','reset','exit'].every(id=>page.includes('id="'+id+'"'))&&page.includes('id="quote-editor"'),'Original settings actions and separate quote editor retained');
+  const manifest=JSON.parse(fs.readFileSync(path.join(ROOT,'plugin.json'),'utf8')),transport=fs.readFileSync(path.join(ROOT,'mcp.json'),'utf8');
+  check(manifest.extensions['com.openai'].requires_local_executor===true&&transport.includes('${PLUGIN_ROOT}')&&!transport.includes('7449'),'Portable official local-executor declaration without developer HTTP port');
   const mock=path.resolve(__dirname,'bin/Release/net10.0/CodexPet.Tests.exe');
   if(fs.existsSync(mock)){
     process.env.CODEX_PET_CODEX=mock;const client=new QuotaClient();
