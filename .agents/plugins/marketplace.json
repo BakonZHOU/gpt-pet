@@ -1,0 +1,10 @@
+{
+  "name": "bakon-gpt-pet",
+  "interface": { "displayName": "Bakon GPT Pet" },
+  "plugins": [{
+    "name": "codex-pet-app",
+    "source": { "source": "local", "path": "./" },
+    "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+    "category": "Productivity"
+  }]
+}

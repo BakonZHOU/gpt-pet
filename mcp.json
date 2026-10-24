@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": { "petapp": {
+    "type": "stdio",
+    "command": "${PLUGIN_ROOT}/runtime/node.exe",
+    "args": ["${PLUGIN_ROOT}/server.cjs"],
+    "cwd": "${PLUGIN_ROOT}",
+    "extensions": { "com.openai": { "auth": { "type": "none" } } }
+  } }
+}

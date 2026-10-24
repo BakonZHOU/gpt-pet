@@ -1,0 +1,12 @@
+若叶睦皮肤制作记录
+
+素材：Assets/Skins/Mutsumi.png
+方式：内置 imagegen（非CLI）；依据用户提供的两张角色参考图及初稿修订。
+画风：Q版粗描边、浅灰绿顺直长发、少量发片、棕灰半睁眼、发夹、紫色格纹服装、细领结、单根弧形呆毛。
+运行时：透明PNG缓存到本机；使用同图分层裁切，呆毛单独旋转；更换皮肤不调用模型。
+原版鲸鱼娘设计与素材：MeteorNOX（MIT），见 LICENSE.whale-widget。
+
+最终提示词（内置 imagegen）：
+Use case: identity-preserve / precise-object-edit. Asset: transparent square chibi desktop pet portrait. Image 1 is the EDIT TARGET (our mint pet); Image 2 is the authoritative hairstyle and clothing reference of Wakaba Mutsumi; Image 3 is the authoritative simple sleepy CHIBI FACE/style reference. Correct the character while preserving the edit target's square framing, head scale, 2D clean thick outline, soft restrained cel shading, huge rounded face, sleepy taupe half-lidded eyes, faint blush, absent mouth, pale muted sage hair, genuine transparency and the single curved ahoge. Main change: the target currently has far too much fluffy layered hair. Replace it with Mutsumi's smooth straight compact hair: rounded modest crown, simple straight bangs, two smooth tapered cheek-length side locks, long straight rear hair that falls close to the neck/shoulders. Keep the outline quiet and narrow. NO fluffy fanning curls, NO shaggy feathered ends, NO extra outward spikes or many tufts; at most two broad simple shapes per side. Add her small plain hairpin over the right temple. Replace maid frills and oversized navy bow with the upper portion of Image 2's muted purple plaid dress, cream simple collar and slim dark teal ribbon tie, rendered in the SAME simple chibi style; plaid is very subtle, minimal line count. Bust portrait only, no hands/arms/full body/cats/background. Ahoge should stay small, slim, curved once toward the left and centered near x=58%; keep it entirely above the main head silhouette, attached with a narrow stem. Technical layout: main head begins at y~21%, ahoge in upper 4%-20% with no other object in top 18%, crown/face/bust fill rest, sides inside 6%-94%; natural clean lower silhouette with a few transparent pixels at bottom. Eliminate all stray footer pixels, edge glitch lines, white fringe, colored noise. Entire asset must look like ONE coherent clean hand-drawn chibi sticker, matching Image 3's restrained cute simple drawing, not a different detailed anime style for the clothing. No text, no watermark, no checkerboard. Real transparent background.
+
+主题配色：气泡底色 #F5F8EF，描边 #304B3A，文字 #556B57，辅助文字 #8A9B86；原版保持蓝白色。
