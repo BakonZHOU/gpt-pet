@@ -42,9 +42,10 @@ string quoteFile = Path.Combine(Path.GetTempPath(), "CodexPetQuotes-" + Guid.New
 try
 {
     var catalog = new QuoteCatalog(quoteFile);
-    File.WriteAllText(quoteFile, "# comment\n好模型... ↓\n\n");
-    Check(catalog.Read().SequenceEqual(new[] { "好模型... ↓" }), "Editable quotes ignore comments and blank lines");
-    Check(catalog.Pick(.15, .9) is null && catalog.Pick(1, 0) == "好模型... ↓", "Normal outcome is reset count; hidden quotes use configurable probability");
+    File.WriteAllText(quoteFile, "# comment\n好模型... ↓\n区…\n\n");
+    Check(catalog.Read().SequenceEqual(new[] { "好模型... ↓", "区…" }), "Editable quotes ignore comments and blank lines");
+    Check(catalog.Pick(.15, .9) is null && catalog.Read().Contains(catalog.Pick(1, 0)!), "Normal outcome is reset count; hidden quotes use configurable probability");
+    Check(catalog.PickRequired("区") == "区…", "Required quote prefers the current corpus entry beginning with 区");
     File.WriteAllText(quoteFile, "我自己修改的语录");
     Check(catalog.Pick(1, 0) == "我自己修改的语录", "Saved quote changes take effect without restart");
     File.WriteAllText(quoteFile, "# no quotes");

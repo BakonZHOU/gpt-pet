@@ -2,10 +2,16 @@ namespace CodexPetPlugin;
 
 public sealed class QuoteCatalog
 {
-    public string FilePath { get; }
+    private readonly bool followsSkin;
+    public string FilePath { get; private set; }
     public QuoteCatalog(string? filePath = null)
     {
-        FilePath = filePath ?? PluginPaths.QuotesFile;
+        followsSkin = filePath is null;
+        FilePath = filePath ?? PluginPaths.QuotesFile("whale");
+    }
+    public void UseSkin(string? skinId)
+    {
+        if (followsSkin) FilePath = PluginPaths.QuotesFile(skinId);
     }
     public IReadOnlyList<string> Read()
     {
@@ -21,5 +27,11 @@ public sealed class QuoteCatalog
         if (roll >= probability) return null;
         var lines = Read();
         return lines.Count != 0 ? lines[Random.Shared.Next(lines.Count)] : null;
+    }
+    public string? PickRequired(string prefix)
+    {
+        var lines = Read();
+        if (lines.Count == 0) return null;
+        return lines.FirstOrDefault(line => line.StartsWith(prefix, StringComparison.Ordinal)) ?? lines[Random.Shared.Next(lines.Count)];
     }
 }

@@ -5,6 +5,12 @@ $petManifest=Get-Content -LiteralPath (Join-Path $petRoot 'plugin.json') -Raw|Co
 $petProject=Join-Path $petRoot 'native-src/CodexPetPlugin.csproj'
 $petNative=Join-Path $petRoot 'native'
 if(!$ReuseBuild){
+ if(Test-Path -LiteralPath $petNative){
+  $petResolvedNative=[IO.Path]::GetFullPath($petNative)
+  $petExpectedNative=[IO.Path]::GetFullPath((Join-Path $petRoot 'native'))
+  if($petResolvedNative -ne $petExpectedNative){throw 'Native output path validation failed'}
+  Remove-Item -LiteralPath $petResolvedNative -Recurse -Force
+ }
  dotnet publish $petProject -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o $petNative --nologo
  if($LASTEXITCODE -ne 0){throw 'Native plugin build failed'}
 }
@@ -17,6 +23,7 @@ New-Item -ItemType Directory -Path $petStage -Force|Out-Null
 foreach($petName in @('plugin.json','mcp.json','quotes.txt','README.md','LICENSE','LICENSE.whale-widget')){
  if(Test-Path -LiteralPath (Join-Path $petRoot $petName)){Copy-Item -LiteralPath (Join-Path $petRoot $petName) -Destination (Join-Path $petStage $petName) -Force}
 }
+Copy-Item -LiteralPath (Join-Path $petRoot 'quotes') -Destination $petStage -Recurse -Force
 New-Item -ItemType Directory -Path (Join-Path $petStage 'native') -Force|Out-Null
 Copy-Item -Path (Join-Path $petNative '*') -Destination (Join-Path $petStage 'native') -Recurse -Force
 New-Item -ItemType Directory -Path (Join-Path $petStage 'assets/Skins') -Force|Out-Null

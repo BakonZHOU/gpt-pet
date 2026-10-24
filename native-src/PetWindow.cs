@@ -216,6 +216,7 @@ public sealed class PetWindow : Window
         MenuStroke.Color = Color.FromArgb(89, Outline.Color.R, Outline.Color.G, Outline.Color.B);
         ButtonFill.Color = Color.FromArgb(217, Outline.Color.R, Outline.Color.G, Outline.Color.B);
         settings.Skin = skin.Id;
+        quotes.UseSkin(skin.Id);
     }
     internal void PrepareSkin(string id) => ApplySkin(id);
     private void SetLines(string a, string b, string c)
@@ -352,7 +353,9 @@ public sealed class PetWindow : Window
         if (!bubbleOpen) { ShowQuota(animate); return; }
         if (randomActive) { HideBubble(false); return; }
         randomActive = true;
-        string? quote = quotes.Pick(settings.QuoteChance, Random.Shared.NextDouble());
+        string? quote = data?.FiveHour.Remaining is <= 0
+            ? quotes.PickRequired("区")
+            : quotes.Pick(settings.QuoteChance, Random.Shared.NextDouble());
         if (quote is not null)
         {
             amount.FontSize = Base * (quote.Length <= 9 ? 128 : 66) / 1026;
@@ -470,9 +473,15 @@ public sealed class PetWindow : Window
     }
     private void Play(bool down)
     {
+        StopSounds();
         if (!settings.Sound || settings.Volume == 0 || preview) return;
         string file = settings.SoundSet == "fx1" ? down ? "D1.mp3" : "D2.mp3" : down ? "Ya1.mp3" : "Ya2.mp3";
         try { var player = down ? pressAudio : releaseAudio; player.Open(new Uri(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", file))); player.Volume = settings.Volume; player.Play(); } catch { }
+    }
+    private void StopSounds()
+    {
+        try { pressAudio.Stop(); } catch { }
+        try { releaseAudio.Stop(); } catch { }
     }
     private void OnDown(object sender, MouseButtonEventArgs e)
     {
@@ -500,6 +509,7 @@ public sealed class PetWindow : Window
     }
     private void ReleasePress()
     {
+        try { pressAudio.Stop(); } catch { }
         foreach (var property in new[] { ScaleTransform.ScaleXProperty, ScaleTransform.ScaleYProperty })
             squeeze.BeginAnimation(property, new DoubleAnimation(1, TimeSpan.FromSeconds(.22)) { EasingFunction = new BackEase { EasingMode = EasingMode.EaseOut, Amplitude = .5 } });
     }
@@ -578,7 +588,7 @@ public sealed class PetWindow : Window
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;
         skinPicker.SelectedItem = PetSkins.Find("mutsumi");
-        Check(settings.Skin == "mutsumi" && skinBody.Source != oldSkinSource && skinBody.Clip is RectangleGeometry,
+        Check(settings.Skin == "mutsumi" && skinBody.Source != oldSkinSource && skinBody.Clip is RectangleGeometry && System.IO.Path.GetFileName(quotes.FilePath) == "语录-若叶睦.txt",
             "Settings skin selector immediately replaces body and separates the new ahoge");
         Check(skinHair.Source == skinBody.Source && ahoge.CenterY == PetSkins.Find("mutsumi").HairPivot.Y && Width == 200 && !bubbleOpen,
             "Mutsumi skin uses matching artwork layers without changing size or opening quota bubble");
@@ -589,13 +599,13 @@ public sealed class PetWindow : Window
             "Mutsumi skin recolors cloud, both small bubbles, text and menu using the same green theme");
         var mintSource = skinBody.Source;
         skinPicker.SelectedItem = PetSkins.Find("dragon");
-        Check(settings.Skin == "dragon" && skinBody.Source != mintSource && skinBody.Clip is CombinedGeometry && ReferenceEquals(skinBody.Source, skinHair.Source),
+        Check(settings.Skin == "dragon" && skinBody.Source != mintSource && skinBody.Clip is CombinedGeometry && ReferenceEquals(skinBody.Source, skinHair.Source) && System.IO.Path.GetFileName(quotes.FilePath) == "语录-GPT娘白龙.txt",
             "White dragon is a third distinct skin; its horns stay on the static body while only the central ahoge moves");
         Check(Outline.Color == (Color)ColorConverter.ConvertFromString("#534264") && BubbleFill.Color == (Color)ColorConverter.ConvertFromString("#F8F3FC") &&
               ReferenceEquals(amount.Foreground, Ink) && Width == 200,
             "White dragon changes bubble and text to lavender without resizing the pet");
         skinPicker.SelectedItem = PetSkins.Find("whale");
-        Check(settings.Skin == "whale" && skinBody.Source == oldSkinSource && skinBody.Clip is null,
+        Check(settings.Skin == "whale" && skinBody.Source == oldSkinSource && skinBody.Clip is null && System.IO.Path.GetFileName(quotes.FilePath) == "语录-鲸鱼娘.txt",
             "Original skin restores immediately from cache");
         Check(Outline.Color == (Color)ColorConverter.ConvertFromString("#203170") && BubbleFill.Color == Colors.White,
             "Switching back restores original blue and white bubble theme");
@@ -608,6 +618,10 @@ public sealed class PetWindow : Window
         settings.QuoteChance = 1; BubbleClick(false);
         Check(randomActive && quotes.Read().Contains(amount.Text), "Second click can show an original editable hidden quote");
         BubbleClick(); Check(!bubbleOpen, "Third click also closes hidden quotes");
+        data = data! with { FiveHour = data.FiveHour with { Remaining = 0 } };
+        ShowQuota(false); settings.QuoteChance = 0; BubbleClick(false);
+        Check(randomActive && amount.Text.StartsWith("区") && quotes.Read().Contains(amount.Text), "Exhausted five-hour quota forces the current skin's 区 quote on the second click");
+        BubbleClick();
         ShowQuota(false); ScheduleClose(); await Task.Delay(6000);
         Check(bubble.Visibility == Visibility.Collapsed, "Bubble auto closes after five seconds");
         double savedLeft = Left, savedTop = Top;

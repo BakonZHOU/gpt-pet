@@ -2,3 +2,4 @@ artifacts/** text=auto eol=lf whitespace=-blank-at-eof
 artifacts/**/*.exe binary
 artifacts/**/*.png binary
 artifacts/**/*.mp3 binary
+*.json text eol=lf

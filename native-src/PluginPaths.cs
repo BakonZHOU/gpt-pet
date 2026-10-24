@@ -14,7 +14,13 @@ public static class PluginPaths
     public static string MutexName => "Local\\CodexPet.Plugin." + Key;
     public static string PipeName => "CodexPet.Plugin.Control." + Key;
     public static string SettingsFile => Path.Combine(Data, "settings.json");
-    public static string QuotesFile => Path.Combine(Data, "语录.txt");
+    public static string QuotesFile(string? skinId) => Path.Combine(Data, PetSkins.Find(skinId).Id switch
+    {
+        "mutsumi" => "语录-若叶睦.txt",
+        "dragon" => "语录-GPT娘白龙.txt",
+        _ => "语录-鲸鱼娘.txt"
+    });
+    public static string BundledQuotesFile(string? skinId) => Path.Combine(Root, "quotes", PetSkins.Find(skinId).Id + ".txt");
     public static string ConfigFile => Path.Combine(Environment.GetEnvironmentVariable("CODEX_HOME") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".codex"), "config.toml");
     public static string Version => typeof(PluginPaths).Assembly.GetName().Version?.ToString() ?? "0.3.0";
 
@@ -65,13 +71,33 @@ public static class PluginPaths
             }
             catch (Exception e) when (e is IOException or JsonException or InvalidOperationException) { }
         }
-        if (!File.Exists(QuotesFile))
+        string legacyFile = Path.Combine(Data, "语录.txt");
+        bool legacyCustomized = File.Exists(legacyFile) && !SameQuotesExceptRequired(legacyFile, Path.Combine(Root, "quotes.txt"));
+        string[]? previousLines = null;
+        if (!File.Exists(legacyFile) && previous is not null)
         {
-            string[]? lines = null;
-            try { if (previous is not null) lines = JsonSerializer.Deserialize<string[]>(File.ReadAllText(Path.Combine(previous, "quotes.json"))); } catch (Exception e) when (e is IOException or JsonException) { }
-            if (lines is not null) File.WriteAllLines(QuotesFile, lines);
-            else File.Copy(Path.Combine(Root, "quotes.txt"), QuotesFile, false);
+            try { previousLines = JsonSerializer.Deserialize<string[]>(File.ReadAllText(Path.Combine(previous, "quotes.json"))); } catch (Exception e) when (e is IOException or JsonException) { }
         }
+        foreach (var skin in PetSkins.All)
+        {
+            string target = QuotesFile(skin.Id);
+            if (!File.Exists(target))
+            {
+                if (legacyCustomized) File.Copy(legacyFile, target, false);
+                else if (previousLines is not null) File.WriteAllLines(target, previousLines);
+                else File.Copy(BundledQuotesFile(skin.Id), target, false);
+            }
+            if (!File.ReadLines(target).Select(line => line.Trim()).Any(line => line.StartsWith("区", StringComparison.Ordinal)))
+                File.AppendAllText(target, Environment.NewLine + "区…" + Environment.NewLine);
+        }
+    }
+    private static bool SameQuotesExceptRequired(string first, string second)
+    {
+        static string[] Lines(string file) => File.ReadLines(file).Select(line => line.Trim())
+            .Where(line => line.Length != 0 && !line.StartsWith('#') && !line.StartsWith("区", StringComparison.Ordinal)).ToArray();
+        try { return Lines(first).SequenceEqual(Lines(second)); }
+        catch (IOException) { return false; }
+        catch (UnauthorizedAccessException) { return false; }
     }
     public static string SessionStamp()
     {

@@ -1,6 +1,6 @@
 # 移植经验与后续开发
 
-本文记录桌面版移植为 GPT/Codex 本地插件浮窗时的关键结论，以及以后修改、测试和发布的固定流程。当前基线为插件版 `v0.3.3`。
+本文记录桌面版移植为 GPT/Codex 本地插件浮窗时的关键结论，以及以后修改、测试和发布的固定流程。当前基线为插件版 `v0.3.5`。
 
 ## 1. 最终架构
 
@@ -66,7 +66,7 @@ account/rateLimits/read
 - 皮肤与主题色：`native-src/PetSkins.cs`。
 - 人物、气泡、点击、右键菜单、呼吸和呆毛：`native-src/PetWindow.cs`。
 - 配置默认值与保存：`native-src/PetSettings.cs`。
-- 语录默认文件：`quotes.txt`；用户副本在插件数据目录的 `语录.txt`。
+- 三套默认语料：`quotes/whale.txt`、`quotes/mutsumi.txt`、`quotes/dragon.txt`；用户副本分别为 `语录-鲸鱼娘.txt`、`语录-若叶睦.txt`、`语录-GPT娘白龙.txt`。切换皮肤时同步切换“编辑语录”的目标文件。
 - 任务栏避让：`native-src/TaskbarAvoidance.cs`。
 - 额度解析和 5 小时/周窗口：`native-src/Quota.cs`、`QuotaDropTracker.cs`。
 
