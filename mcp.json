@@ -1,13 +1,4 @@
 {
-  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
-  "mcpServers": {
-    "petapp": {
-      "type": "stdio",
-      "command": "./runtime/node.exe",
-      "args": [
-        "${PLUGIN_ROOT}/server.cjs"
-      ],
-      "cwd": "${PLUGIN_ROOT}"
-    }
-  }
+ "$schema":"https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+ "mcpServers":{"petapp":{"type":"stdio","command":"./native/CodexPetPlugin.exe","args":["--mcp","--plugin-root","${PLUGIN_ROOT}"],"cwd":"${PLUGIN_ROOT}"}}
 }

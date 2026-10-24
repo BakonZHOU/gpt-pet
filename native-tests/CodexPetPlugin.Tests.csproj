@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+ <ItemGroup>
+  <Compile Include="../native-src/Quota.cs" Link="Quota.cs" />
+  <Compile Include="../native-src/CodexClient.cs" Link="CodexClient.cs" />
+  <Compile Include="../native-src/QuotaDropTracker.cs" Link="QuotaDropTracker.cs" />
+  <Compile Include="../native-src/QuoteCatalog.cs" Link="QuoteCatalog.cs" />
+  <Compile Include="../native-src/HostLifetimeState.cs" Link="HostLifetimeState.cs" />
+  <Compile Include="../native-src/HostLifetime.cs" Link="HostLifetime.cs" />
+  <Compile Include="../native-src/PluginPaths.cs" Link="PluginPaths.cs" />
+  <Compile Include="../native-src/PetSettings.cs" Link="PetSettings.cs" />
+  <Compile Include="../native-src/PetSkins.cs" Link="PetSkins.cs" />
+ </ItemGroup>
+</Project>

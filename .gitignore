@@ -1,8 +1,10 @@
-node_modules/
-runtime/node.exe
-ui.bundle.js
+native/
+**/bin/
+**/obj/
 artifacts/
 work/
+node_modules/
+runtime/
 .env
 auth.json
 settings.json
