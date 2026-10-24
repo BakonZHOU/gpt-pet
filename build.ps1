@@ -5,13 +5,14 @@ $petManifest=Get-Content -LiteralPath (Join-Path $petRoot 'plugin.json') -Raw|Co
 $petProject=Join-Path $petRoot 'native-src/CodexPetPlugin.csproj'
 $petNative=Join-Path $petRoot 'native'
 if(!$ReuseBuild){
- dotnet publish $petProject -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o $petNative --nologo
+ dotnet publish $petProject -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=None -p:DebugSymbols=false -o $petNative --nologo
  if($LASTEXITCODE -ne 0){throw 'Native plugin build failed'}
 }
 foreach($petRequired in @('CodexPetPlugin.exe','Assets/DSniang1.png','Assets/Skins/Mutsumi.png','Assets/Skins/WhiteDragon.png')){
  if(!(Test-Path -LiteralPath (Join-Path $petNative $petRequired))){throw ('Missing native asset: '+$petRequired)}
 }
 $petStage=Join-Path $petRoot ('artifacts/plugin-'+$petManifest.version)
+if(Test-Path -LiteralPath $petStage){Remove-Item -LiteralPath $petStage -Recurse -Force}
 New-Item -ItemType Directory -Path $petStage -Force|Out-Null
 foreach($petName in @('plugin.json','mcp.json','quotes.txt','README.md','LICENSE','LICENSE.whale-widget')){
  if(Test-Path -LiteralPath (Join-Path $petRoot $petName)){Copy-Item -LiteralPath (Join-Path $petRoot $petName) -Destination (Join-Path $petStage $petName) -Force}

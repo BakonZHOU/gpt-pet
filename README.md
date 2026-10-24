@@ -14,6 +14,8 @@ Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装�
 - 启动时会把运行文件放入用户运行缓存，避免浮窗占用插件安装目录而妨碍卸载。不写Windows安装注册表，不创建开机启动项。
 - 数据与运行缓存位于 `%LOCALAPPDATA%/CodexPetPlugin/<插件标识摘要>/`。仅首次迁移本插件旧应用内版的设置和语录，桌面版数据不变。
 
+纯插件不能在 GPT 尚未加载插件系统时提前运行。GPT 重启后，打开任意本地聊天让宿主初始化已启用的 MCP，浮窗会自动出现；若刚切换启用状态仍未出现，重开 GPT 或调用“显示插件桌宠”。要做到 GPT 进程一出现就无条件启动，只能另装监视程序，本版本刻意不这样做。
+
 ## 额度
 
 仅调用Codex只读额度元数据接口，长连接推送、文件活动合并刷新与10秒轮询兜底。不创建聊天、不调用模型、不消耗重置机会。
@@ -21,6 +23,17 @@ Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装�
 ## 安装与发布
 
 官方本地MCP结构：根目录plugin.json、mcp.json和包内原生stdio程序。正式目录上架仍需要OpenAI合作伙伴白名单及审核，本GitHub包不代表已进入官方商店。
+
+### 发给别人安装
+
+对方使用 Windows 版 GPT/Codex，在终端执行：
+
+```powershell
+codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin
+codex plugin add codex-pet-app@bakon-gpt-pet
+```
+
+然后重开 GPT。也可以只执行第一条命令，重开 GPT 后在“插件目录”选择 `Bakon GPT Pet` 来源，安装并启用“额度伙伴 · 插件浮窗”。这属于官方支持的 Git 市场安装方式，不需要桌面软件安装器。更新时执行 `codex plugin marketplace upgrade bakon-gpt-pet`，再在插件目录更新；如果宿主尚未重载，重开 GPT。
 
 开发者在Windows x64运行 `./build.ps1`，然后使用生成的 `artifacts/plugin-0.3.3` 安装测试。`./package.ps1 -ReuseBuild` 生成ZIP，plugin.json直接位于ZIP根目录。接收者无需运行独立软件安装器。
 
@@ -35,3 +48,5 @@ Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装�
 - https://developers.openai.com/plugins/deploy/desktop-only
 
 开发者可在已运行GPT的Windows本机执行 "node tests/lifecycle.cjs"，在隔离的临时配置中验证9项浮窗生命周期；此测试需要开发用Node，插件运行不需要。
+
+详细的移植结论、源码修改位置、测试与发布步骤见 [移植经验与后续开发](docs/MIGRATION.md)。
