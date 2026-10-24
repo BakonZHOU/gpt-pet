@@ -33,6 +33,10 @@ let passed=0;function check(value,label){assert(value,label);console.log('PASS '
   check(['edit-quotes','hide','reset','exit'].every(id=>page.includes('id="'+id+'"'))&&page.includes('id="quote-editor"'),'Original settings actions and separate quote editor retained');
   const manifest=JSON.parse(fs.readFileSync(path.join(ROOT,'plugin.json'),'utf8')),transport=fs.readFileSync(path.join(ROOT,'mcp.json'),'utf8');
   check(manifest.extensions['com.openai'].requires_local_executor===true&&transport.includes('${PLUGIN_ROOT}')&&!transport.includes('7449'),'Portable official local-executor declaration without developer HTTP port');
+  const launch=JSON.parse(transport).mcpServers.petapp;
+  check(launch.command.startsWith('./')&&!launch.extensions,'Launch config is accepted by the installed portable stdio parser');
+  const backend=fs.readFileSync(path.join(ROOT,'server.cjs'),'utf8');
+  check(!backend.includes('CodexWhalePet')&&!backend.includes("'CodexPet','settings.json'")&&!backend.includes('child_process'),'Plugin settings and runtime do not read or control the desktop pet');
   const mock=path.resolve(__dirname,'bin/Release/net10.0/CodexPet.Tests.exe');
   if(fs.existsSync(mock)){
     process.env.CODEX_PET_CODEX=mock;const client=new QuotaClient();

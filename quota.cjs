@@ -44,7 +44,7 @@ class QuotaClient {
       const waiter=this.pending.get(m.id);if(waiter){clearTimeout(waiter.timer);this.pending.delete(m.id);m.error?waiter.reject(Error('Codex暂未提供额度，请检查登录状态')):waiter.resolve(m.result);}
       else if(m.method==='account/rateLimits/updated'){this.latest=parse(m.params??{},this.latest,true);this.onChange?.(this.latest);}
     });
-    await this.request('initialize',{clientInfo:{name:'codex_pet_app',title:'Quota Companion',version:'0.2.0'}});this.send({method:'initialized'});
+    await this.request('initialize',{clientInfo:{name:'codex_pet_app',title:'Quota Companion',version:'0.2.1'}});this.send({method:'initialized'});
   }
   async read(force=false){
     if(this.reading)return this.reading;if(!force && this.latest && Date.now()-this.lastRead<3000)return this.latest;

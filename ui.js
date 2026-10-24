@@ -55,7 +55,7 @@ $('exit').onclick=()=>{hide();if(window.openai?.requestClose)window.openai.reque
 $('show').onclick=()=>{hidden=false;$('pet').hidden=false;$('empty').hidden=true;$('show').hidden=true;refresh(true);};
 document.addEventListener('visibilitychange',()=>{if(document.hidden){drops.reset();stopAlerts();callTool?.('pet_pause',{clientId}).catch(()=>{});}else refresh(false);});window.addEventListener('pagehide',()=>callTool?.('pet_pause',{clientId}).catch(()=>{}));new ResizeObserver(()=>applyPrefs()).observe($('board'));
 async function connect(){
- if(window.parent!==window){try{app=new App({name:'quota-companion',version:'0.2.0'},{},{autoResize:false});app.ontoolresult=r=>consume(r);await app.connect();callTool=(name,args)=>app.callServerTool({name,arguments:args});}catch{if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);}}
+ if(window.parent!==window){try{app=new App({name:'quota-companion',version:'0.2.1'},{},{autoResize:false});app.ontoolresult=r=>consume(r);await app.connect();callTool=(name,args)=>app.callServerTool({name,arguments:args});}catch{if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);}}
  else if(window.openai?.callTool)callTool=(n,a)=>window.openai.callTool(n,a);
  if(!callTool){$('status').textContent='请从GPT的插件入口打开';return;}await refresh(false,true);setInterval(()=>refresh(false),3000);
 }

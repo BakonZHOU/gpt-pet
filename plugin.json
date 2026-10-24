@@ -1,16 +1,24 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "codex-pet-app",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "在GPT面板内运行的额度伙伴：三套皮肤、主题气泡、额度提醒与可编辑语录。",
   "license": "MIT",
-  "extensions": { "com.openai": { "requires_local_executor": true, "interface": {
-    "displayName": "额度伙伴 · 应用内版",
-    "shortDescription": "直接在GPT面板显示额度伙伴，不启动桌宠窗口",
-    "longDescription": "三套皮肤与原版气泡；5小时/每周额度、重置时间/次数、每1%提醒和语录。只读本机Codex元数据，不调用模型。Windows x64本地MCP后端；公开发布需符合桌面插件审核条件。",
-    "developerName": "Local",
-    "category": "Productivity",
-    "capabilities": ["Read", "Write"],
-    "logo": "./assets/DSniang1.png"
-  } } }
+  "extensions": {
+    "com.openai": {
+      "requires_local_executor": true,
+      "interface": {
+        "displayName": "额度伙伴 · 应用内版",
+        "shortDescription": "直接在GPT面板显示额度伙伴，不启动桌宠窗口",
+        "longDescription": "三套皮肤与原版气泡；5小时/每周额度、重置时间/次数、每1%提醒和语录。只读本机Codex元数据，不调用模型。Windows x64本地MCP后端；公开发布需符合桌面插件审核条件。",
+        "developerName": "Local",
+        "category": "Productivity",
+        "capabilities": [
+          "Read",
+          "Write"
+        ],
+        "logo": "./assets/DSniang1.png"
+      }
+    }
+  }
 }
