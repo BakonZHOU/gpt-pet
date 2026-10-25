@@ -444,7 +444,7 @@ final class PetController: NSObject, NSApplicationDelegate {
         else { hostAbsent = 0 }
         // The session hook may fire before the desktop process list settles.
         // Keep the early window alive instead of falling back to MCP a minute later.
-        if Date().timeIntervalSince(startupAt) >= 15 && hostObserved && hostAbsent >= 3 {
+        if Date().timeIntervalSince(startupAt) >= 15 && hostObserved && hostAbsent >= 12 {
             NSApp.terminate(nil)
         }
     }

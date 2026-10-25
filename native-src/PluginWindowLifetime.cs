@@ -5,6 +5,7 @@ namespace CodexPetPlugin;
 
 public sealed class PluginWindowLifetime : IDisposable
 {
+    private const int HostRestartBridgeSamples = 12;
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly Stopwatch startup = Stopwatch.StartNew();
     private readonly PetWindow window;
@@ -41,7 +42,10 @@ public sealed class PluginWindowLifetime : IDisposable
         // for a real exit/disable: it caused the window to flash, close, and
         // wait for the much later MCP discovery fallback.
         if (startup.Elapsed < TimeSpan.FromSeconds(15)) return;
-        if (pluginDisabled < 3 && (!hostObserved || hostAbsent < 3)) return;
+        // Codex currently starts the local-plugin session several seconds after
+        // recreating its desktop processes. Keep the existing window across
+        // that hand-off so a normal app restart has no visible gap.
+        if (pluginDisabled < 3 && (!hostObserved || hostAbsent < HostRestartBridgeSamples)) return;
         closingAutomatically = true; window.Close();
     }
     public void Dispose() => timer.Stop();
