@@ -12,6 +12,7 @@ public static class Program
     {
         PluginPaths.Configure(args);
         if (args.Contains("--mcp")) return PluginMcp.Run();
+        if (args.Contains("--apply-update")) return PluginUpdater.ApplyAfterDesktopExitAsync().GetAwaiter().GetResult();
         
         if (args.Contains("--probe"))
         {

@@ -39,7 +39,7 @@ codex plugin add codex-pet-app@bakon-gpt-pet
 
 开发者在Windows x64运行 `./build.ps1`，然后使用生成的 `artifacts/plugin-0.3.9` 安装测试。`./package.ps1 -ReuseBuild` 生成ZIP，plugin.json直接位于ZIP根目录。接收者无需运行独立软件安装器。
 
-发布版可以作为 Codex Git 市场安装：`codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin`，再安装 `codex-pet-app@local-whale-pet`。桌宠右键的「检查更新」会先用 Codex 原生命令刷新市场并比较版本，只在有新版时安装，不会重复覆盖正在运行的当前版本。
+发布版可以作为 Codex Git 市场安装：`codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin`，再安装 `codex-pet-app@local-whale-pet`。桌宠右键的「检查更新」会先用 Codex 原生命令刷新市场并比较版本；相同版本不重复安装，发现新版则在 GPT 关闭、文件锁释放后自动调用原生安装命令。
 
 启用开关保存加载许可，启动动作发生在GPT初始化插件服务时；客户端若尚未重新加载插件目录，需刷新插件或重开GPT。公开目录不支持通过随包Hook绕过宿主加载机制。
 

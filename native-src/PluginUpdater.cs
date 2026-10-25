@@ -25,11 +25,39 @@ public static class PluginUpdater
         if (!Version.TryParse(latest, out var newest) || !Version.TryParse(PluginPaths.Version, out var running) || newest <= running)
             return new("已是最新", "v" + latest, "GPT原生市场已检查");
 
-        var install = await RunCodexAsync(["plugin", "add", PluginPaths.Id, "--json"], cancellationToken);
-        if (install.ExitCode != 0)
-            return new("安装失败", current, ShortError(install.Error));
+        return ScheduleInstall()
+            ? new("发现新版", "v" + latest, "关闭GPT后自动更新")
+            : new("等待更新", "v" + latest, "更新任务已在运行");
+    }
 
-        return new("已更新", "v" + latest, "重启GPT后生效");
+    private static bool ScheduleInstall()
+    {
+        string? executable = Environment.ProcessPath;
+        if (executable is null) return false;
+        var start = new ProcessStartInfo(executable) { UseShellExecute = true, WindowStyle = ProcessWindowStyle.Hidden };
+        foreach (string value in new[] { "--apply-update", "--plugin-root", PluginPaths.Root, "--plugin-id", PluginPaths.Id, "--data-dir", PluginPaths.Data })
+            start.ArgumentList.Add(value);
+        using var helper = Process.Start(start);
+        return helper is not null;
+    }
+
+    public static async Task<int> ApplyAfterDesktopExitAsync()
+    {
+        using var singleton = new Mutex(true, PluginPaths.MutexName + ".Updater", out bool first);
+        if (!first) return 0;
+        using var timeout = new CancellationTokenSource(TimeSpan.FromHours(24));
+        try
+        {
+            while (HostLifetime.DesktopRunning() is not false)
+                await Task.Delay(TimeSpan.FromSeconds(2), timeout.Token);
+            await Task.Delay(TimeSpan.FromSeconds(2), timeout.Token);
+            string marketplace = PluginPaths.Id.Split('@', 2).Last();
+            var refresh = await RunCodexAsync(["plugin", "marketplace", "upgrade", marketplace, "--json"], timeout.Token);
+            if (refresh.ExitCode != 0) return 2;
+            var install = await RunCodexAsync(["plugin", "add", PluginPaths.Id, "--json"], timeout.Token);
+            return install.ExitCode == 0 ? 0 : 3;
+        }
+        catch (OperationCanceledException) { return 4; }
     }
 
     private static async Task<string> ReadMarketplaceVersionAsync(string pluginName, string marketplaceName, CancellationToken cancellationToken)
