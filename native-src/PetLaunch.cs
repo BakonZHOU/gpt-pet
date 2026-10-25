@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
+using System.Windows.Interop;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -22,7 +22,10 @@ public sealed partial class PetWindow
     private readonly ScaleTransform flightSquash = new(1, 1);
     private readonly RotateTransform aimRotation = new();
     private readonly Canvas chargeArrow = new() { Width = 320, Height = 320, IsHitTestVisible = false, Visibility = Visibility.Collapsed };
-    private readonly Popup arrowPopup = new() { AllowsTransparency = true, StaysOpen = true, Placement = PlacementMode.AbsolutePoint, IsHitTestVisible = false };
+    private readonly Window arrowOverlay = new() { AllowsTransparency = true, WindowStyle = WindowStyle.None,
+        ResizeMode = ResizeMode.NoResize, Background = Brushes.Transparent, ShowInTaskbar = false,
+        ShowActivated = false, Topmost = true, IsHitTestVisible = false };
+    private readonly Canvas arrowSurface = new() { IsHitTestVisible = false };
     private readonly Viewbox arrowView = new() { IsHitTestVisible = false };
     private FrameworkElement launchPet = null!;
     private Vector velocity;
@@ -48,7 +51,12 @@ public sealed partial class PetWindow
             Stroke = arrowInk, StrokeThickness = 5, StrokeLineJoin = PenLineJoin.Round, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round };
         chargeArrow.Children.Add(shaft); chargeArrow.Children.Add(head);
         aimRotation.CenterX = aimRotation.CenterY = 160; chargeArrow.RenderTransform = aimRotation;
-        arrowView.Child = chargeArrow; arrowPopup.Child = arrowView;
+        arrowView.Child = chargeArrow; arrowSurface.Children.Add(arrowView); arrowOverlay.Content = arrowSurface;
+        arrowOverlay.SourceInitialized += (_, _) =>
+        {
+            nint handle = new WindowInteropHelper(arrowOverlay).Handle;
+            SetWindowLong(handle, -20, GetWindowLong(handle, -20) | 0x20 | 0x8000000 | 0x80);
+        };
         launchTimer.Tick += (_, _) => TickLaunch();
     }
     private void BeginCharge()
@@ -58,7 +66,7 @@ public sealed partial class PetWindow
     private void CancelCharge()
     {
         holdClock.Reset(); chargeArrow.Visibility = Visibility.Collapsed;
-        arrowPopup.IsOpen = false;
+        arrowOverlay.Hide();
         if (launchPhase == LaunchPhase.Idle) launchTimer.Stop();
     }
     private void TickLaunch()
@@ -76,10 +84,17 @@ public sealed partial class PetWindow
             chargeArrow.Visibility = Visibility.Visible;
             double arrowScale = Width / Base;
             arrowView.Width = arrowView.Height = 320 * arrowScale;
-            var dpi = VisualTreeHelper.GetDpi(this);
-            arrowPopup.HorizontalOffset = chest.X / dpi.DpiScaleX - 160 * arrowScale;
-            arrowPopup.VerticalOffset = chest.Y / dpi.DpiScaleY - 160 * arrowScale;
-            aimRotation.Angle = aim * 180 / Math.PI; arrowPopup.IsOpen = true;
+            if (!arrowOverlay.IsVisible)
+            {
+                arrowOverlay.Left = SystemParameters.VirtualScreenLeft; arrowOverlay.Top = SystemParameters.VirtualScreenTop;
+                arrowOverlay.Width = SystemParameters.VirtualScreenWidth; arrowOverlay.Height = SystemParameters.VirtualScreenHeight;
+                arrowOverlay.Show();
+            }
+            Point anchor = arrowOverlay.PointFromScreen(chest);
+            Canvas.SetLeft(arrowView, anchor.X - 160 * arrowScale);
+            Canvas.SetTop(arrowView, anchor.Y - 160 * arrowScale);
+            aimRotation.Angle = aim * 180 / Math.PI;
+            arrowSurface.UpdateLayout();
             return;
         }
         double elapsed = launchClock.Elapsed.TotalSeconds;
@@ -189,5 +204,7 @@ public sealed partial class PetWindow
     }
     [StructLayout(LayoutKind.Sequential)] private struct CursorPoint { public int X, Y; }
     [DllImport("user32.dll")] private static extern bool GetCursorPos(out CursorPoint point);
+    [DllImport("user32.dll", EntryPoint = "GetWindowLongW")] private static extern int GetWindowLong(nint handle, int index);
+    [DllImport("user32.dll", EntryPoint = "SetWindowLongW")] private static extern int SetWindowLong(nint handle, int index, int value);
     private static Point CursorPosition() { GetCursorPos(out var point); return new(point.X, point.Y); }
 }

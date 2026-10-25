@@ -154,7 +154,7 @@ public sealed partial class PetWindow : Window
         countdown.Tick += (_, _) => { if (bubble.Visibility == Visibility.Visible && !randomActive) Render(); };
         Closed += (_, _) =>
         {
-            launchTimer.Stop(); CompositionTarget.Rendering -= RenderLaunch; arrowPopup.IsOpen = false; poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
+            launchTimer.Stop(); CompositionTarget.Rendering -= RenderLaunch; arrowOverlay.Close(); poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
             lifetime.Cancel(); client.Dispose(); pressAudio.Close(); releaseAudio.Close();
             if (!preview) { settings.Left = Left; settings.Top = bottomGap is { } gap ? TaskbarAvoidance.Read(this).BaselineBottom - Height - gap : Top; settings.BottomGap = bottomGap; settings.Save(); }
         };
@@ -712,6 +712,9 @@ public sealed partial class PetWindow : Window
         Check(alertRun is null && notices.Count == 0, "Manual interaction cancels pending automatic reminders");
         BeginCharge(); await Task.Delay(1350);
         Check(ChargeReady && chargeArrow.Visibility == Visibility.Visible, "Holding beyond the press animation plus one second starts charge and aiming");
+        Point chestAnchor = launchPet.PointToScreen(new Point(launchPet.ActualWidth / 2, launchPet.ActualHeight * .85));
+        Point arrowAnchor = chargeArrow.PointToScreen(new Point(160, 160));
+        Check((chestAnchor - arrowAnchor).Length < 2, $"Aiming arrow pivot stays at the pet chest even at the screen edge (chest {chestAnchor}, arrow {arrowAnchor})");
         aim = -Math.PI * .72; FirePet(1);
         Check(launchPhase == LaunchPhase.Flying && chargeArrow.Visibility == Visibility.Collapsed && velocity.Length > 5000,
             "Full charge launches the pet and hides its fixed-length aiming arrow");
