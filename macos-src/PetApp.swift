@@ -399,6 +399,8 @@ final class PetController: NSObject, NSApplicationDelegate {
     private var settings: SettingsPanel!
     private var lifetimeTimer: Timer?
     private var hostAbsent = 0
+    private let startupAt = Date()
+    private var hostObserved = false
     init(pluginRoot: String, hostPID: Int32?) { self.pluginRoot = pluginRoot; self.hostPID = hostPID }
     func applicationDidFinishLaunching(_ notification: Notification) {
         PluginMCP.writePID()
@@ -437,7 +439,13 @@ final class PetController: NSObject, NSApplicationDelegate {
                 return name == "chatgpt" || name == "codex" || path.contains("openai.codex")
             }
         }
-        hostAbsent = running ? 0 : hostAbsent + 1
-        if hostAbsent >= 2 { NSApp.terminate(nil) }
+        if running { hostObserved = true; hostAbsent = 0 }
+        else if hostObserved { hostAbsent += 1 }
+        else { hostAbsent = 0 }
+        // The session hook may fire before the desktop process list settles.
+        // Keep the early window alive instead of falling back to MCP a minute later.
+        if Date().timeIntervalSince(startupAt) >= 15 && hostObserved && hostAbsent >= 3 {
+            NSApp.terminate(nil)
+        }
     }
 }

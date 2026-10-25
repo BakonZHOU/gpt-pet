@@ -6,9 +6,12 @@ namespace CodexPetPlugin;
 public sealed class PluginWindowLifetime : IDisposable
 {
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly Stopwatch startup = Stopwatch.StartNew();
     private readonly PetWindow window;
     private bool closingAutomatically;
     private int hostAbsent;
+    private int pluginDisabled;
+    private bool hostObserved;
     public PluginWindowLifetime(PetWindow window)
     {
         this.window = window;
@@ -28,8 +31,17 @@ public sealed class PluginWindowLifetime : IDisposable
     private void Check()
     {
         bool? host = HostLifetime.DesktopRunning();
-        hostAbsent = host == false ? hostAbsent + 1 : 0;
-        if (PluginPaths.Enabled() && hostAbsent < 2) return;
+        if (host == true) { hostObserved = true; hostAbsent = 0; }
+        else if (host == false && hostObserved) hostAbsent++;
+        else hostAbsent = 0;
+        pluginDisabled = PluginPaths.Enabled() ? 0 : pluginDisabled + 1;
+
+        // SessionStart can run while the desktop process and config are still
+        // being replaced during startup.  Do not mistake that short interval
+        // for a real exit/disable: it caused the window to flash, close, and
+        // wait for the much later MCP discovery fallback.
+        if (startup.Elapsed < TimeSpan.FromSeconds(15)) return;
+        if (pluginDisabled < 3 && (!hostObserved || hostAbsent < 3)) return;
         closingAutomatically = true; window.Close();
     }
     public void Dispose() => timer.Stop();
