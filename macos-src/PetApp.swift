@@ -23,7 +23,7 @@ final class ArrowOverlay {
     private let window: NSWindow
     private let view = ArrowView()
     init() {
-        let union = NSScreen.screens.map(\.frame).reduce(.zero) { $0.union($1) }
+        let union = NSScreen.screens.map(\.frame).reduce(NSRect.zero) { $0.union($1) }
         window = NSWindow(contentRect: union, styleMask: [.borderless], backing: .buffered, defer: false)
         window.backgroundColor = .clear; window.isOpaque = false; window.hasShadow = false
         window.ignoresMouseEvents = true; window.level = .screenSaver
@@ -152,7 +152,8 @@ final class PetView: NSView {
         let paragraph = NSMutableParagraphStyle(); paragraph.alignment = .center
         var y = main.midY + CGFloat(lines.count - 1) * 12
         for (index, line) in lines.enumerated() {
-            var size: CGFloat = index == 1 ? 25 : 13
+            let quoteOnly = bubbleStage == 2 && lines.count == 1
+            var size: CGFloat = quoteOnly ? (line.count <= 8 ? 25 : line.count <= 14 ? 18 : 15) : (index == 1 ? 25 : 13)
             if line.count > 12 { size = max(10, 24 - CGFloat(line.count - 12) * 0.7) }
             let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: index == 1 ? .bold : .semibold), .foregroundColor: index == lines.count - 1 ? theme.hint : theme.ink, .paragraphStyle: paragraph]
             let box = CGRect(x: main.minX + 10, y: y - size / 2, width: main.width - 20, height: size * 1.3)

@@ -373,10 +373,10 @@ public sealed partial class PetWindow : Window
     }
     private void FitQuote(string quote)
     {
-        amount.FontWeight = quote.Length <= 9 ? FontWeights.ExtraBold : FontWeights.SemiBold;
+        amount.FontWeight = quote.Length <= 8 ? FontWeights.ExtraBold : FontWeights.SemiBold;
         amount.TextWrapping = TextWrapping.Wrap; amount.TextTrimming = TextTrimming.CharacterEllipsis;
         amount.MaxWidth = QuoteMaxWidth; amount.MaxHeight = double.PositiveInfinity;
-        double size = Base * (quote.Length <= 9 ? 128 : quote.Length <= 14 ? 82 : 70) / 1026;
+        double size = Base * (quote.Length <= 8 ? 128 : quote.Length <= 14 ? 82 : 70) / 1026;
         double minimum = Base * 42 / 1026;
         while (true)
         {
@@ -625,6 +625,9 @@ public sealed partial class PetWindow : Window
         FitQuote("你目录里的dsh是什么...大烧货吗...?");
         Check(words.DesiredSize.Width <= QuoteMaxWidth + .5 && words.DesiredSize.Height <= QuoteMaxHeight + .5,
             "Long mixed-language quotes fit inside the original thought bubble");
+        FitQuote("黄瓜比需求更有条理");
+        Check(amount.FontSize <= Base * 82 / 1026 && words.DesiredSize.Width <= QuoteMaxWidth + .5,
+            "Nine-character quotes use the medium type scale and stay inside the bubble");
         Check(bubble.Visibility == Visibility.Collapsed && chargeArrow.Visibility == Visibility.Collapsed, "Idle contains only whale and hidden hover menu; no quota card");
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;
