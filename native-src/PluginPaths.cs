@@ -81,14 +81,15 @@ public static class PluginPaths
         foreach (var skin in PetSkins.All)
         {
             string target = QuotesFile(skin.Id);
-            string? previousDefault = skin.Id switch
+            string[] previousDefaults = skin.Id switch
             {
-                "whale" => "F61D0E98AE1688B70051362A5CDF9CB7FDB18B88388B34F461218CFF37638942",
-                "mutsumi" => "D875E1FE048746F79AC4F7471B00D42EBFC3F74BF44DC11D4E2DEA072E22D40A",
-                "dragon" => "793AF03C77BF1EA5C03BAC77BAE4F634FCAC42A725A41BF7B97C284E58ED8CDC",
-                _ => null
+                "whale" => ["F61D0E98AE1688B70051362A5CDF9CB7FDB18B88388B34F461218CFF37638942", "62A0F85D22111B40BB0CCE9A692A4D15BCE3E43515B5CAC1DD8659E8192C9EEC"],
+                "mutsumi" => ["D875E1FE048746F79AC4F7471B00D42EBFC3F74BF44DC11D4E2DEA072E22D40A", "8D35B810AF286481836CDE5455A67D956DF230DCBA8BF6917DD96C897F7444E7"],
+                "dragon" => ["793AF03C77BF1EA5C03BAC77BAE4F634FCAC42A725A41BF7B97C284E58ED8CDC", "0C6E74717EC6C848251D1F3505B2BCDFAB4690BA4740A7C5250F0D1F5C135EBC"],
+                _ => []
             };
-            if (File.Exists(target) && previousDefault == QuoteHash(target)) File.Copy(BundledQuotesFile(skin.Id), target, true);
+            if (File.Exists(target) && QuoteHash(target) is { } currentHash && previousDefaults.Contains(currentHash))
+                File.Copy(BundledQuotesFile(skin.Id), target, true);
             if (!File.Exists(target))
             {
                 if (legacyCustomized) File.Copy(legacyFile, target, false);
