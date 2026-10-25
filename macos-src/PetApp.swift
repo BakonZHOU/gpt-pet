@@ -398,6 +398,7 @@ final class PetController: NSObject, NSApplicationDelegate {
     private var pet: PetView!
     private var settings: SettingsPanel!
     private var lifetimeTimer: Timer?
+    private var hostAbsent = 0
     init(pluginRoot: String, hostPID: Int32?) { self.pluginRoot = pluginRoot; self.hostPID = hostPID }
     func applicationDidFinishLaunching(_ notification: Notification) {
         PluginMCP.writePID()
@@ -427,6 +428,16 @@ final class PetController: NSObject, NSApplicationDelegate {
         window.setFrameOrigin(CGPoint(x: area.maxX - window.frame.width, y: area.minY))
     }
     private func checkHost() {
-        if let hostPID, kill(hostPID, 0) != 0 { NSApp.terminate(nil) }
+        let running: Bool
+        if let hostPID { running = kill(hostPID, 0) == 0 }
+        else {
+            running = NSWorkspace.shared.runningApplications.contains { app in
+                let name = app.localizedName?.lowercased() ?? ""
+                let path = app.executableURL?.path.lowercased() ?? ""
+                return name == "chatgpt" || name == "codex" || path.contains("openai.codex")
+            }
+        }
+        hostAbsent = running ? 0 : hostAbsent + 1
+        if hostAbsent >= 2 { NSApp.terminate(nil) }
     }
 }

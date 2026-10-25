@@ -21,6 +21,8 @@ if CommandLine.arguments.contains("--self-test") {
     print("PASS macOS quota parser, skin names and version 0.4.0")
 } else if CommandLine.arguments.contains("--mcp") {
     PluginMCP.run(pluginRoot: root)
+} else if CommandLine.arguments.contains("--launch") {
+    exit(PluginMCP.launchFromHook(pluginRoot: root) ? 0 : 1)
 } else {
     let app = NSApplication.shared; app.setActivationPolicy(.accessory)
     let delegate = PetController(pluginRoot: root, hostPID: argument("--mcp-pid").flatMap(Int32.init))

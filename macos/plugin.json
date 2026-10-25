@@ -7,6 +7,7 @@
   "extensions": {
     "com.openai": {
       "requires_local_executor": true,
+      "hooks": "./hooks/hooks.json",
       "interface": {
         "displayName": "额度伙伴 · macOS",
         "shortDescription": "启用后由GPT加载独立浮窗，右键人物设置",

@@ -24,6 +24,7 @@ foreach($petName in @('plugin.json','mcp.json','quotes.txt','README.md','LICENSE
  if(Test-Path -LiteralPath (Join-Path $petRoot $petName)){Copy-Item -LiteralPath (Join-Path $petRoot $petName) -Destination (Join-Path $petStage $petName) -Force}
 }
 Copy-Item -LiteralPath (Join-Path $petRoot 'quotes') -Destination $petStage -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $petRoot 'hooks-windows') -Destination $petStage -Recurse -Force
 New-Item -ItemType Directory -Path (Join-Path $petStage 'native') -Force|Out-Null
 Copy-Item -Path (Join-Path $petNative '*') -Destination (Join-Path $petStage 'native') -Recurse -Force
 New-Item -ItemType Directory -Path (Join-Path $petStage 'assets/Skins') -Force|Out-Null

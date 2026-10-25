@@ -55,6 +55,18 @@ enum PluginMCP {
         do { try child.run(); return true } catch { return false }
     }
 
+    @discardableResult static func launchFromHook(pluginRoot: String) -> Bool {
+        if guiIsRunning() {
+            DistributedNotificationCenter.default().post(name: .init("com.bakon.codexpet.show"), object: nil)
+            return true
+        }
+        let child = Process()
+        child.executableURL = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
+        child.arguments = ["--gui", "--plugin-root", pluginRoot]
+        child.standardInput = FileHandle.nullDevice; child.standardOutput = FileHandle.nullDevice; child.standardError = FileHandle.nullDevice
+        do { try child.run(); return true } catch { return false }
+    }
+
     static func writePID() { try? "\(getpid())".write(toFile: pidFile, atomically: true, encoding: .utf8) }
     static func clearPID() { try? FileManager.default.removeItem(atPath: pidFile) }
 

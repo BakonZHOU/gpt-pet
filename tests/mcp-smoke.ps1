@@ -37,7 +37,10 @@ try{
  if($petStatus.structuredContent.running){throw 'Disabled plugin launched a window'}
  $petTransport=Get-Content -LiteralPath (Join-Path $petRoot 'mcp.json') -Raw|ConvertFrom-Json
  if($petTransport.mcpServers.petapp.command -ne './native/CodexPetPlugin.exe'){throw 'Plugin must launch its bundled runtime'}
- Write-Output 'PASS native stdio MCP, matching version, own-instance tools, no control panel and no startup while disabled'
+ $petHooks=Get-Content -LiteralPath (Join-Path $petRoot 'hooks-windows/hooks.json') -Raw|ConvertFrom-Json
+ $petHookCommand=$petHooks.hooks.SessionStart[0].hooks[0].command
+ if($petManifest.extensions.'com.openai'.hooks -ne './hooks-windows/hooks.json' -or $petHookCommand -notmatch '--launch'){throw 'SessionStart hook is not wired to the fast native launcher'}
+ Write-Output 'PASS native stdio MCP, matching version, SessionStart launcher, own-instance tools, no control panel and no startup while disabled'
 }finally{
  $petProcess.StandardInput.Close()
  if(!$petProcess.WaitForExit(5000)){$petProcess.Kill($true)}
