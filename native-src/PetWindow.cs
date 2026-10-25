@@ -14,6 +14,7 @@ public sealed class PetWindow : Window
 {
     // All coordinates and proportions below come from the original widget.
     private const double Base = 375, WhaleFraction = .5945;
+    private const double QuoteMaxWidth = Base * 560 / 1026, QuoteMaxHeight = Base * 315 / 1026;
     private const string BubblePath = "M 827 248 A 373 232 0 1 0 81 246 A 373 232 0 0 0 301 465 A 57 32 10 0 0 413 484 A 373 232 0 0 0 827 248 Z";
     private readonly bool preview;
     private readonly bool idlePreview;
@@ -289,7 +290,7 @@ public sealed class PetWindow : Window
         if (!settings.BubbleOn) return;
         if (!automatic) StopAlerts();
         weeklyDisplay = weekly;
-        amount.TextWrapping = TextWrapping.NoWrap; amount.MaxWidth = double.PositiveInfinity;
+        amount.TextWrapping = TextWrapping.NoWrap; amount.TextTrimming = TextTrimming.None; amount.MaxWidth = amount.MaxHeight = double.PositiveInfinity;
         amount.FontWeight = FontWeights.ExtraBold; amount.LineHeight = Base * 128 / 1026 * 1.05;
         randomActive = false; amount.FontSize = Base * 128 / 1026; Render(); OpenBubble(animate, replay);
     }
@@ -358,19 +359,32 @@ public sealed class PetWindow : Window
             : quotes.Pick(settings.QuoteChance, Random.Shared.NextDouble());
         if (quote is not null)
         {
-            amount.FontSize = Base * (quote.Length <= 9 ? 128 : 66) / 1026;
-            amount.FontWeight = quote.Length <= 9 ? FontWeights.ExtraBold : FontWeights.SemiBold;
-            amount.TextWrapping = TextWrapping.Wrap; amount.MaxWidth = Base * 560 / 1026;
-            amount.LineHeight = amount.FontSize * 1.15;
-            SetLines("", quote, "");
+            FitQuote(quote);
         }
         else
         {
             amount.FontSize = Base * 128 / 1026; amount.LineHeight = amount.FontSize * 1.05;
-            amount.FontWeight = FontWeights.ExtraBold; amount.MaxWidth = double.PositiveInfinity; amount.TextWrapping = TextWrapping.NoWrap;
+            amount.FontWeight = FontWeights.ExtraBold; amount.MaxWidth = amount.MaxHeight = double.PositiveInfinity; amount.TextWrapping = TextWrapping.NoWrap; amount.TextTrimming = TextTrimming.None;
             SetLines("剩余重置次数", data?.ResetCount is { } count ? $"{count} 次" : "--", "");
         }
         OpenBubble(animate);
+    }
+    private void FitQuote(string quote)
+    {
+        amount.FontWeight = quote.Length <= 9 ? FontWeights.ExtraBold : FontWeights.SemiBold;
+        amount.TextWrapping = TextWrapping.Wrap; amount.TextTrimming = TextTrimming.CharacterEllipsis;
+        amount.MaxWidth = QuoteMaxWidth; amount.MaxHeight = double.PositiveInfinity;
+        double size = Base * (quote.Length <= 9 ? 128 : quote.Length <= 14 ? 82 : 70) / 1026;
+        double minimum = Base * 42 / 1026;
+        while (true)
+        {
+            amount.FontSize = size; amount.LineHeight = size * 1.12;
+            SetLines("", quote, "");
+            if ((words.DesiredSize.Width <= QuoteMaxWidth + .5 && words.DesiredSize.Height <= QuoteMaxHeight + .5) || size <= minimum) break;
+            size = Math.Max(minimum, size - 1);
+        }
+        amount.MaxHeight = QuoteMaxHeight;
+        SetLines("", quote, "");
     }
     private void RecenterWords()
     {
@@ -565,7 +579,7 @@ public sealed class PetWindow : Window
         MenuAction("检查更新", async () =>
         {
             StopAlerts(); randomActive = true; amount.FontSize = Base * 104 / 1026;
-            amount.LineHeight = amount.FontSize * 1.05; amount.TextWrapping = TextWrapping.NoWrap; amount.MaxWidth = double.PositiveInfinity;
+            amount.LineHeight = amount.FontSize * 1.05; amount.TextWrapping = TextWrapping.NoWrap; amount.TextTrimming = TextTrimming.None; amount.MaxWidth = amount.MaxHeight = double.PositiveInfinity;
             SetLines("正在检查更新", "…", "GPT原生市场"); OpenBubble(false);
             try
             {
@@ -579,7 +593,7 @@ public sealed class PetWindow : Window
         MenuAction("重置时间", () =>
         {
             StopAlerts(); randomActive = true; amount.FontSize = Base * 104 / 1026;
-            amount.LineHeight = amount.FontSize * 1.05; amount.TextWrapping = TextWrapping.NoWrap; amount.MaxWidth = double.PositiveInfinity;
+            amount.LineHeight = amount.FontSize * 1.05; amount.TextWrapping = TextWrapping.NoWrap; amount.TextTrimming = TextTrimming.None; amount.MaxWidth = amount.MaxHeight = double.PositiveInfinity;
             SetLines("下次重置", ShortReset(data?.FiveHour), "每周 " + ResetDate(data?.Weekly)); OpenBubble();
         });
         panel.Children.Add(new Separator());
@@ -598,6 +612,9 @@ public sealed class PetWindow : Window
             .SelectMany(row => row.Children.OfType<Slider>()).ToArray();
         Check(speedSliders.Length == 2 && speedSliders.All(s => s.Minimum == .1 && s.Maximum == 6), "Breathing and ahoge speed controls both span 0.1 to 6 seconds");
         Check(((StackPanel)((Border)menu.Child).Child).Children.OfType<Button>().Any(button => Equals(button.Content, "检查更新")), "Right-click settings exposes native GPT marketplace update check");
+        FitQuote("你目录里的dsh是什么...大烧货吗...?");
+        Check(words.DesiredSize.Width <= QuoteMaxWidth + .5 && words.DesiredSize.Height <= QuoteMaxHeight + .5,
+            "Long mixed-language quotes fit inside the original thought bubble");
         Check(bubble.Visibility == Visibility.Collapsed && root.Children.Count == 2, "Idle contains only whale and hidden hover menu; no quota card");
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;
