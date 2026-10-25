@@ -24,7 +24,13 @@ public static class PluginMcp
                 ControlPipe.Send("quit");
                 for (int attempt = 0; attempt < 60 && Running(); attempt++) Thread.Sleep(50);
             }
-            if (Running()) return !explicitShow || ControlPipe.Send("show");
+            if (Running())
+            {
+                if (!explicitShow || ControlPipe.Send("show")) return true;
+                StopUnresponsiveWindow();
+                for (int attempt = 0; attempt < 40 && Running(); attempt++) Thread.Sleep(50);
+                if (Running()) return false;
+            }
             if (!explicitShow && PluginPaths.Suppressed()) return false;
             PluginPaths.PrepareUserFiles();
             string source = Path.Combine(PluginPaths.Root, "native", "CodexPetPlugin.exe");
@@ -50,8 +56,16 @@ public static class PluginMcp
             // inheritable pipe handles through CreateProcess on Windows.
             var start = new ProcessStartInfo(Path.Combine(runtime, "CodexPetPlugin.exe")) { UseShellExecute = true, WorkingDirectory = runtime };
             foreach (var value in new[] { "--plugin-root", PluginPaths.Root, "--plugin-id", PluginPaths.Id, "--data-dir", PluginPaths.Data }) start.ArgumentList.Add(value);
+            try { File.Delete(Path.Combine(PluginPaths.Data, "window.pid")); } catch (IOException) { }
             using var child = Process.Start(start);
-            return child is not null;
+            if (child is null) return false;
+            for (int attempt = 0; attempt < 40; attempt++)
+            {
+                if (Running()) return true;
+                try { if (child.HasExited) break; } catch (InvalidOperationException) { break; }
+                Thread.Sleep(50);
+            }
+            return Running();
         }
         finally { gate.ReleaseMutex(); }
     }
@@ -66,6 +80,18 @@ public static class PluginMcp
             return file is not null && file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) && Version.TryParse(FileVersionInfo.GetVersionInfo(file).FileVersion, out var version) ? version : null;
         }
         catch (Exception e) when (e is IOException or ArgumentException or FormatException or InvalidOperationException or System.ComponentModel.Win32Exception) { return null; }
+    }
+    private static void StopUnresponsiveWindow()
+    {
+        try
+        {
+            int id = int.Parse(File.ReadAllText(Path.Combine(PluginPaths.Data, "window.pid")));
+            using var process = Process.GetProcessById(id);
+            string? file = process.MainModule?.FileName;
+            string prefix = Path.Combine(PluginPaths.Data, "runtime") + Path.DirectorySeparatorChar;
+            if (file is not null && file.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) process.Kill(entireProcessTree: true);
+        }
+        catch (Exception e) when (e is IOException or ArgumentException or FormatException or InvalidOperationException or System.ComponentModel.Win32Exception) { }
     }
     public static int Run()
     {

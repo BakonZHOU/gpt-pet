@@ -13,6 +13,7 @@ public static class Program
         PluginPaths.Configure(args);
         if (args.Contains("--mcp")) return PluginMcp.Run();
         if (args.Contains("--launch")) return PluginMcp.EnsureRunning(true) ? 0 : 1;
+        if (args.Contains("--ensure")) return PluginMcp.EnsureRunning(false) ? 0 : 1;
         if (args.Contains("--apply-update")) return PluginUpdater.ApplyAfterDesktopExitAsync().GetAwaiter().GetResult();
         
         if (args.Contains("--probe"))

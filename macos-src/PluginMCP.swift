@@ -60,6 +60,15 @@ enum PluginMCP {
             DistributedNotificationCenter.default().post(name: .init("com.bakon.codexpet.show"), object: nil)
             return true
         }
+        return startIndependentGUI(pluginRoot: pluginRoot)
+    }
+
+    @discardableResult static func ensureFromHook(pluginRoot: String) -> Bool {
+        if guiIsRunning() { return true }
+        return startIndependentGUI(pluginRoot: pluginRoot)
+    }
+
+    private static func startIndependentGUI(pluginRoot: String) -> Bool {
         let child = Process()
         child.executableURL = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
         child.arguments = ["--gui", "--plugin-root", pluginRoot]

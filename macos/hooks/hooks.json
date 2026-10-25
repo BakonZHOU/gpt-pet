@@ -5,8 +5,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${PLUGIN_ROOT}/native/CodexPetPlugin\" --launch --plugin-root \"${PLUGIN_ROOT}\"",
+            "command": "\"${PLUGIN_ROOT}/native/CodexPetPlugin\" --ensure --plugin-root \"${PLUGIN_ROOT}\"",
             "statusMessage": "正在启动额度伙伴"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/native/CodexPetPlugin\" --ensure --plugin-root \"${PLUGIN_ROOT}\"",
+            "statusMessage": "正在确认额度伙伴状态"
           }
         ]
       }

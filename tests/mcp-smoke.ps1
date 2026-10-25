@@ -39,8 +39,9 @@ try{
  if($petTransport.mcpServers.petapp.command -ne './native/CodexPetPlugin.exe'){throw 'Plugin must launch its bundled runtime'}
  $petHooks=Get-Content -LiteralPath (Join-Path $petRoot 'hooks-windows/hooks.json') -Raw|ConvertFrom-Json
  $petHookCommand=$petHooks.hooks.SessionStart[0].hooks[0].command
- if($petManifest.extensions.'com.openai'.hooks -ne './hooks-windows/hooks.json' -or $petHookCommand -notmatch '--launch'){throw 'SessionStart hook is not wired to the fast native launcher'}
- Write-Output 'PASS native stdio MCP, matching version, SessionStart launcher, own-instance tools, no control panel and no startup while disabled'
+ $petPromptCommand=$petHooks.hooks.UserPromptSubmit[0].hooks[0].command
+ if($petManifest.extensions.'com.openai'.hooks -ne './hooks-windows/hooks.json' -or $petHookCommand -notmatch '--ensure' -or $petPromptCommand -ne $petHookCommand){throw 'Session and prompt hooks are not wired to the same non-intrusive native launcher'}
+ Write-Output 'PASS native stdio MCP, matching version, self-healing hooks, own-instance tools, no control panel and no startup while disabled'
 }finally{
  $petProcess.StandardInput.Close()
  if(!$petProcess.WaitForExit(5000)){$petProcess.Kill($true)}
