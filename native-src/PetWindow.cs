@@ -10,7 +10,7 @@ using System.Windows.Threading;
 
 namespace CodexPetPlugin;
 
-public sealed class PetWindow : Window
+public sealed partial class PetWindow : Window
 {
     // All coordinates and proportions below come from the original widget.
     private const double Base = 375, WhaleFraction = .5945;
@@ -82,7 +82,8 @@ public sealed class PetWindow : Window
         pet.Children.Add(new Viewbox { Child = source });
         Canvas.SetLeft(pet, Base - whaleSize); Canvas.SetTop(pet, Base - whaleSize); body.Children.Add(pet);
         pet.MouseLeftButtonDown += OnDown; pet.MouseMove += OnMove; pet.MouseLeftButtonUp += OnUp;
-        pet.LostMouseCapture += (_, _) => ReleasePress();
+        pet.LostMouseCapture += (_, _) => { if (mouseDown.HasValue) CancelCharge(); ReleasePress(); };
+        SetupLaunch(pet);
         pet.MouseEnter += (_, _) => menuButton!.Opacity = 1;
         pet.MouseLeave += (_, _) => { if (!menu.IsOpen && !IsMouseOver) menuButton!.Opacity = 0; };
 
@@ -153,7 +154,7 @@ public sealed class PetWindow : Window
         countdown.Tick += (_, _) => { if (bubble.Visibility == Visibility.Visible && !randomActive) Render(); };
         Closed += (_, _) =>
         {
-            poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
+            launchTimer.Stop(); poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
             lifetime.Cancel(); client.Dispose(); pressAudio.Close(); releaseAudio.Close();
             if (!preview) { settings.Left = Left; settings.Top = bottomGap is { } gap ? TaskbarAvoidance.Read(this).BaselineBottom - Height - gap : Top; settings.BottomGap = bottomGap; settings.Save(); }
         };
@@ -423,7 +424,7 @@ public sealed class PetWindow : Window
     }
     private void ApplyTaskbar()
     {
-        if (preview || !IsVisible || dragging || mouseDown.HasValue || bottomGap is not { } gap) return;
+        if (preview || launchPhase != LaunchPhase.Idle || !IsVisible || dragging || mouseDown.HasValue || bottomGap is not { } gap) return;
         MoveForTaskbar(TaskbarAvoidance.Read(this), gap);
     }
     private void MoveForTaskbar(TaskbarBounds bar, double gap)
@@ -500,23 +501,31 @@ public sealed class PetWindow : Window
     }
     private void OnDown(object sender, MouseButtonEventArgs e)
     {
+        if (launchPhase != LaunchPhase.Idle) { e.Handled = true; return; }
         double currentTop = Top; BeginAnimation(TopProperty, null); Top = currentTop;
         taskbarTarget = null;
         mouseDown = e.GetPosition(this); dragging = false; ((UIElement)sender).CaptureMouse();
         squeeze.BeginAnimation(ScaleTransform.ScaleXProperty, new DoubleAnimation(1.05, TimeSpan.FromSeconds(.22)));
         squeeze.BeginAnimation(ScaleTransform.ScaleYProperty, new DoubleAnimation(.88, TimeSpan.FromSeconds(.22)));
         Play(true); e.Handled = true;
+        BeginCharge();
     }
     private void OnMove(object sender, MouseEventArgs e)
     {
+        if (launchPhase != LaunchPhase.Idle || ChargeReady) return;
         if (mouseDown is not { } origin || e.LeftButton != MouseButtonState.Pressed || dragging || (e.GetPosition(this) - origin).Length < 3) return;
-        dragging = true; bottomGap = null; ((UIElement)sender).ReleaseMouseCapture();
+        CancelCharge(); dragging = true; bottomGap = null; ((UIElement)sender).ReleaseMouseCapture();
         try { DragMove(); } catch (InvalidOperationException) { }
         mouseDown = null; ReleasePress(); KeepVisible(); Snap(); RememberBottomAnchor(); ApplyTaskbar();
         settings.Left = Left; settings.Top = Top; settings.Save();
     }
     private async void OnUp(object sender, MouseButtonEventArgs e)
     {
+        if (ChargeReady && mouseDown.HasValue)
+        {
+            mouseDown = null; ((UIElement)sender).ReleaseMouseCapture(); ReleasePress(); FirePet(); e.Handled = true; return;
+        }
+        CancelCharge();
         bool clicked = mouseDown.HasValue && !dragging; mouseDown = null;
         ((UIElement)sender).ReleaseMouseCapture(); ReleasePress();
         if (clicked) { if (bottomGap is null) RememberBottomAnchor(); ApplyTaskbar(); BubbleClick(); Play(false); if (bubbleOpen && !randomActive) await RefreshAsync(true); }
@@ -616,7 +625,7 @@ public sealed class PetWindow : Window
         FitQuote("你目录里的dsh是什么...大烧货吗...?");
         Check(words.DesiredSize.Width <= QuoteMaxWidth + .5 && words.DesiredSize.Height <= QuoteMaxHeight + .5,
             "Long mixed-language quotes fit inside the original thought bubble");
-        Check(bubble.Visibility == Visibility.Collapsed && root.Children.Count == 2, "Idle contains only whale and hidden hover menu; no quota card");
+        Check(bubble.Visibility == Visibility.Collapsed && chargeArrow.Visibility == Visibility.Collapsed, "Idle contains only whale and hidden hover menu; no quota card");
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;
         skinPicker.SelectedItem = PetSkins.Find("mutsumi");
@@ -701,6 +710,15 @@ public sealed class PetWindow : Window
                 "Sequential bubbles start hidden and grow from 70 percent before text fades in");
         ShowQuota(false);
         Check(alertRun is null && notices.Count == 0, "Manual interaction cancels pending automatic reminders");
+        BeginCharge(); await Task.Delay(1350);
+        Check(ChargeReady && chargeArrow.Visibility == Visibility.Visible, "Holding beyond the press animation plus one second starts charge and aiming");
+        aim = -Math.PI * .72; FirePet(1);
+        Check(launchPhase == LaunchPhase.Flying && chargeArrow.Visibility == Visibility.Collapsed && velocity.Length > 5000,
+            "Full charge launches the pet and hides its fixed-length aiming arrow");
+        await Task.Delay(7900);
+        Check(launchPhase == LaunchPhase.Idle && impacts > 0 && impacts <= 8 && Math.Abs(flightRotation.Angle) < .01 &&
+              Math.Abs(Left - (SystemParameters.WorkArea.Right - Width)) < 1,
+            "Launch rebounds, rests and returns upright to the lower-right corner within eight seconds");
         File.WriteAllLines(output, results);
     }
 }
