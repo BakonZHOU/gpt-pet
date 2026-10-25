@@ -18,22 +18,38 @@ public static class PluginUpdater
         if (refresh.ExitCode != 0)
             return new("无法更新", current, ShortError(refresh.Error));
 
+        string latest;
+        try { latest = await ReadMarketplaceVersionAsync(identity[0], identity[1], cancellationToken); }
+        catch { return new("检查失败", current, "无法读取市场版本"); }
+
+        if (!Version.TryParse(latest, out var newest) || !Version.TryParse(PluginPaths.Version, out var running) || newest <= running)
+            return new("已是最新", "v" + latest, "GPT原生市场已检查");
+
         var install = await RunCodexAsync(["plugin", "add", PluginPaths.Id, "--json"], cancellationToken);
         if (install.ExitCode != 0)
             return new("安装失败", current, ShortError(install.Error));
 
-        string latest = current;
-        try
-        {
-            using var json = JsonDocument.Parse(install.Output);
-            latest = json.RootElement.GetProperty("version").GetString() ?? current;
-        }
-        catch (Exception e) when (e is JsonException or InvalidOperationException) { }
+        return new("已更新", "v" + latest, "重启GPT后生效");
+    }
 
-        bool changed = Version.TryParse(latest, out var newest) && Version.TryParse(PluginPaths.Version, out var running) && newest > running;
-        return changed
-            ? new("已更新", "v" + latest, "重启GPT后生效")
-            : new("已是最新", "v" + latest, "GPT原生市场已检查");
+    private static async Task<string> ReadMarketplaceVersionAsync(string pluginName, string marketplaceName, CancellationToken cancellationToken)
+    {
+        var listing = await RunCodexAsync(["plugin", "marketplace", "list", "--json"], cancellationToken);
+        if (listing.ExitCode != 0) throw new InvalidOperationException(listing.Error);
+        using var listJson = JsonDocument.Parse(listing.Output);
+        string root = listJson.RootElement.GetProperty("marketplaces").EnumerateArray()
+            .First(item => item.GetProperty("name").GetString() == marketplaceName).GetProperty("root").GetString()
+            ?? throw new InvalidOperationException("Marketplace root missing");
+        string rootFull = Path.GetFullPath(root);
+        using var marketJson = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(rootFull, ".agents", "plugins", "marketplace.json"), cancellationToken));
+        string relative = marketJson.RootElement.GetProperty("plugins").EnumerateArray()
+            .First(item => item.GetProperty("name").GetString() == pluginName).GetProperty("source").GetProperty("path").GetString()
+            ?? throw new InvalidOperationException("Plugin source missing");
+        string pluginRoot = Path.GetFullPath(Path.Combine(rootFull, relative));
+        if (!pluginRoot.StartsWith(rootFull + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Plugin source escaped marketplace root");
+        using var pluginJson = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(pluginRoot, "plugin.json"), cancellationToken));
+        return pluginJson.RootElement.GetProperty("version").GetString() ?? throw new InvalidOperationException("Plugin version missing");
     }
 
     private static async Task<(int ExitCode, string Output, string Error)> RunCodexAsync(IEnumerable<string> arguments, CancellationToken cancellationToken)
