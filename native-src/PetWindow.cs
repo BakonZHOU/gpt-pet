@@ -207,7 +207,8 @@ public sealed class PetWindow : Window
             ? new CombinedGeometry(GeometryCombineMode.Exclude, new RectangleGeometry(skin.BodyClip ?? new Rect(0, 0, 610, 610)), new RectangleGeometry(skin.HairClip))
             : skin.BodyClip is { } clip ? new RectangleGeometry(clip) : null;
         skinHair.Clip = new RectangleGeometry(skin.HairClip);
-        ahoge.CenterX = skin.HairPivot.X; ahoge.CenterY = skin.HairPivot.Y;
+        Canvas.SetLeft(skinBody, skin.ContentOffsetX); Canvas.SetLeft(skinHair, skin.ContentOffsetX);
+        ahoge.CenterX = skin.HairPivot.X + skin.ContentOffsetX; ahoge.CenterY = skin.HairPivot.Y;
         Ink.Color = (Color)ColorConverter.ConvertFromString(skin.Theme.Ink);
         Outline.Color = (Color)ColorConverter.ConvertFromString(skin.Theme.Outline);
         Hint.Color = (Color)ColorConverter.ConvertFromString(skin.Theme.Hint);
@@ -621,8 +622,9 @@ public sealed class PetWindow : Window
         skinPicker.SelectedItem = PetSkins.Find("mutsumi");
         Check(settings.Skin == "mutsumi" && skinBody.Source != oldSkinSource && skinBody.Clip is RectangleGeometry && System.IO.Path.GetFileName(quotes.FilePath) == "语录-若叶睦.txt",
             "Settings skin selector immediately replaces body and separates the new ahoge");
-        Check(skinHair.Source == skinBody.Source && ahoge.CenterY == PetSkins.Find("mutsumi").HairPivot.Y && Width == 200 && !bubbleOpen,
-            "Mutsumi skin uses matching artwork layers without changing size or opening quota bubble");
+        Check(skinHair.Source == skinBody.Source && ahoge.CenterY == PetSkins.Find("mutsumi").HairPivot.Y &&
+              Canvas.GetLeft(skinBody) == PetSkins.Find("mutsumi").ContentOffsetX && ahoge.CenterX == PetSkins.Find("mutsumi").HairPivot.X + PetSkins.Find("mutsumi").ContentOffsetX && Width == 200 && !bubbleOpen,
+            "Mutsumi skin removes its asymmetric transparent padding while keeping body and ahoge aligned");
         Check(System.Text.Json.JsonSerializer.Deserialize<PetSettings>(System.Text.Json.JsonSerializer.Serialize(settings))?.Skin == "mutsumi",
             "Selected skin survives settings serialization");
         Check(Outline.Color == (Color)ColorConverter.ConvertFromString("#304B3A") && BubbleFill.Color == (Color)ColorConverter.ConvertFromString("#F5F8EF") &&
@@ -636,7 +638,7 @@ public sealed class PetWindow : Window
               ReferenceEquals(amount.Foreground, Ink) && Width == 200,
             "White dragon changes bubble and text to lavender without resizing the pet");
         skinPicker.SelectedItem = PetSkins.Find("whale");
-        Check(settings.Skin == "whale" && skinBody.Source == oldSkinSource && skinBody.Clip is null && System.IO.Path.GetFileName(quotes.FilePath) == "语录-鲸鱼娘.txt",
+        Check(settings.Skin == "whale" && skinBody.Source == oldSkinSource && skinBody.Clip is null && Canvas.GetLeft(skinBody) == 0 && System.IO.Path.GetFileName(quotes.FilePath) == "语录-鲸鱼娘.txt",
             "Original skin restores immediately from cache");
         Check(Outline.Color == (Color)ColorConverter.ConvertFromString("#203170") && BubbleFill.Color == Colors.White,
             "Switching back restores original blue and white bubble theme");

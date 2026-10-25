@@ -41,6 +41,8 @@ codex plugin add codex-pet-app@bakon-gpt-pet
 
 发布版可以作为 Codex Git 市场安装：`codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin`，再安装 `codex-pet-app@local-whale-pet`。桌宠右键的「检查更新」会先用 Codex 原生命令刷新市场并比较版本；相同版本不重复安装，发现新版则在 GPT 关闭、文件锁释放后自动调用原生安装命令。
 
+无自动更新的 Git 市场旧版，退出 GPT 后重新执行 `codex plugin marketplace upgrade local-whale-pet`，再执行 `codex plugin add codex-pet-app@local-whale-pet`。最早的本地开发市场版需先执行 `codex plugin marketplace remove local-whale-pet`，再按上面的 Git 市场安装命令重新添加；桌宠设置和语录会保留。
+
 启用开关保存加载许可，启动动作发生在GPT初始化插件服务时；客户端若尚未重新加载插件目录，需刷新插件或重开GPT。公开目录不支持通过随包Hook绕过宿主加载机制。
 
 ## 验证
