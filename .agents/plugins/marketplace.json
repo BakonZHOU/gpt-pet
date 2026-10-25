@@ -1,5 +1,5 @@
 {
-  "name": "bakon-gpt-pet",
+  "name": "local-whale-pet",
   "interface": {
     "displayName": "Bakon GPT Pet"
   },
@@ -8,7 +8,7 @@
       "name": "codex-pet-app",
       "source": {
         "source": "local",
-        "path": "./artifacts/plugin-0.3.6"
+        "path": "./artifacts/plugin-0.3.8"
       },
       "policy": {
         "installation": "AVAILABLE",

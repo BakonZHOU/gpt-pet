@@ -562,6 +562,19 @@ public sealed class PetWindow : Window
             button.Click += (_, _) => { menu.IsOpen = false; action(); }; panel.Children.Add(button);
         }
         MenuAction("编辑语录", () => System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(quotes.FilePath) { UseShellExecute = true }));
+        MenuAction("检查更新", async () =>
+        {
+            StopAlerts(); randomActive = true; amount.FontSize = Base * 104 / 1026;
+            amount.LineHeight = amount.FontSize * 1.05; amount.TextWrapping = TextWrapping.NoWrap; amount.MaxWidth = double.PositiveInfinity;
+            SetLines("正在检查更新", "…", "GPT原生市场"); OpenBubble(false);
+            try
+            {
+                var result = await PluginUpdater.CheckAndInstallAsync(lifetime.Token);
+                SetLines(result.Title, result.Version, result.Detail); OpenBubble(false);
+            }
+            catch (OperationCanceledException) { }
+            catch { SetLines("检查失败", "--", "请稍后重试"); OpenBubble(false); }
+        });
         MenuAction("隐藏桌宠", HidePet);
         MenuAction("重置时间", () =>
         {
@@ -584,6 +597,7 @@ public sealed class PetWindow : Window
             .Where(row => row.Children.OfType<TextBlock>().Any(t => t.Text is "呼吸速度" or "呆毛速度"))
             .SelectMany(row => row.Children.OfType<Slider>()).ToArray();
         Check(speedSliders.Length == 2 && speedSliders.All(s => s.Minimum == .1 && s.Maximum == 6), "Breathing and ahoge speed controls both span 0.1 to 6 seconds");
+        Check(((StackPanel)((Border)menu.Child).Child).Children.OfType<Button>().Any(button => Equals(button.Content, "检查更新")), "Right-click settings exposes native GPT marketplace update check");
         Check(bubble.Visibility == Visibility.Collapsed && root.Children.Count == 2, "Idle contains only whale and hidden hover menu; no quota card");
         Check(Width == 200 && Height == 200 && Math.Abs(Width * WhaleFraction - 118.9) < .001, "Compact default: 119px whale; original proportions preserved");
         var oldSkinSource = skinBody.Source;
