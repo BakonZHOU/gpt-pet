@@ -154,7 +154,7 @@ public sealed partial class PetWindow : Window
         countdown.Tick += (_, _) => { if (bubble.Visibility == Visibility.Visible && !randomActive) Render(); };
         Closed += (_, _) =>
         {
-            launchTimer.Stop(); poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
+            launchTimer.Stop(); CompositionTarget.Rendering -= RenderLaunch; arrowPopup.IsOpen = false; poll.Stop(); taskbarTimer.Stop(); closeDelay?.Cancel(); countdown.Stop(); activityTimer.Stop(); activity.Dispose(); StopAlerts(); menu.IsOpen = false;
             lifetime.Cancel(); client.Dispose(); pressAudio.Close(); releaseAudio.Close();
             if (!preview) { settings.Left = Left; settings.Top = bottomGap is { } gap ? TaskbarAvoidance.Read(this).BaselineBottom - Height - gap : Top; settings.BottomGap = bottomGap; settings.Save(); }
         };
