@@ -11,20 +11,21 @@ public static class TaskbarAvoidance
 {
     public static double ComputeBottom(double screenTop, double screenBottom, double workBottom, IEnumerable<(double Top, double Bottom)> bars)
     {
-        // Leave the screen edge available so the mouse can raise an auto-hide taskbar.
-        double bottom = Math.Min(workBottom, screenBottom - 2);
+        // Align the pet exactly with the taskbar/screen edge. The remaining
+        // horizontal screen edge still raises an auto-hide taskbar.
+        double bottom = Math.Min(workBottom, screenBottom);
         foreach (var bar in bars)
         {
             if (bar.Top < (screenTop + screenBottom) / 2 || bar.Bottom < screenBottom - 1) continue;
             double visible = Math.Max(0, Math.Min(screenBottom, bar.Bottom) - Math.Max(screenTop, bar.Top));
             // A hidden auto-hide taskbar keeps a one/two pixel activation strip.
             // Reserve the whole bar as soon as it rises; do not chase every animation frame.
-            if (visible > 4) bottom = Math.Min(bottom, screenBottom - (bar.Bottom - bar.Top) - 2);
+            if (visible > 4) bottom = Math.Min(bottom, screenBottom - (bar.Bottom - bar.Top));
         }
         return bottom;
     }
     public static bool ShouldAnchor(double petBottom, double availableBottom, double baselineBottom) => petBottom >= availableBottom - 28 && petBottom <= baselineBottom + 28;
-    public static bool CanFall(double availableBottom, double baselineBottom) => baselineBottom - availableBottom <= 2.5;
+    public static bool CanFall(double availableBottom, double baselineBottom) => baselineBottom - availableBottom <= .5;
 
     public static TaskbarBounds Read(Window window)
     {

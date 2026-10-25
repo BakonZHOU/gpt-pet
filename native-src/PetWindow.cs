@@ -658,26 +658,26 @@ public sealed class PetWindow : Window
         double savedLeft = Left, savedTop = Top;
         ShowPet(); Render();
         Check(IsVisible && Left == savedLeft && Top == savedTop, "Showing or refreshing the independent pet never relocates it");
-        Check(TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (899d, 947d) }) == 898, "Hidden taskbar keeps a two-pixel mouse activation strip clear");
-        Check(TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (852d, 900d) }) == 850 &&
-              TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (875d, 923d) }) == 850,
-            "Rising taskbar reserves full height immediately at both bottom corners");
-        Check(!TaskbarAvoidance.CanFall(850, 900) && !TaskbarAvoidance.CanFall(873, 900) && TaskbarAvoidance.CanFall(898, 900),
+        Check(TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (899d, 947d) }) == 900, "Hidden taskbar leaves no visible bottom seam");
+        Check(TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (852d, 900d) }) == 852 &&
+              TaskbarAvoidance.ComputeBottom(0, 900, 900, new[] { (875d, 923d) }) == 852,
+            "Rising taskbar reserves its full height without adding a seam");
+        Check(!TaskbarAvoidance.CanFall(852, 900) && !TaskbarAvoidance.CanFall(875, 900) && TaskbarAvoidance.CanFall(900, 900),
             "Free fall waits until taskbar is completely hidden");
-        Check(TaskbarAvoidance.ComputeBottom(0, 900, 852, new[] { (852d, 900d) }) == 850,
+        Check(TaskbarAvoidance.ComputeBottom(0, 900, 852, new[] { (852d, 900d) }) == 852,
             "Always visible taskbar is not counted twice");
-        Top = 698; taskbarTarget = null; taskbarClearSamples = 0;
-        MoveForTaskbar(new(0, 900, 850), 0);
-        Check(Top == 650 && !HasAnimatedProperties, "Taskbar pushes pet upward immediately without a window movement animation");
-        MoveForTaskbar(new(0, 900, 850), 0);
-        Check(Top == 650, "Pet stays up throughout taskbar retraction");
-        MoveForTaskbar(new(0, 900, 898), 0);
-        Check(Top == 650, "First fully hidden sample does not drop the pet prematurely");
-        MoveForTaskbar(new(0, 900, 898), 0);
-        Check((double)GetAnimationBaseValue(TopProperty) == 698 && HasAnimatedProperties == (settings.Animate && SystemParameters.ClientAreaAnimation),
+        Top = 700; taskbarTarget = null; taskbarClearSamples = 0;
+        MoveForTaskbar(new(0, 900, 852), 0);
+        Check(Top == 652 && !HasAnimatedProperties, "Taskbar pushes pet upward immediately without a window movement animation");
+        MoveForTaskbar(new(0, 900, 852), 0);
+        Check(Top == 652, "Pet stays up throughout taskbar retraction");
+        MoveForTaskbar(new(0, 900, 900), 0);
+        Check(Top == 652, "First fully hidden sample does not drop the pet prematurely");
+        MoveForTaskbar(new(0, 900, 900), 0);
+        Check((double)GetAnimationBaseValue(TopProperty) == 700 && HasAnimatedProperties == (settings.Animate && SystemParameters.ClientAreaAnimation),
             "Second fully hidden sample falls while respecting the system animation preference");
         await Task.Delay(400);
-        Check(Math.Abs(Top - 698) < .1 && Left == savedLeft, "Fall lands exactly at original height without horizontal movement");
+        Check(Math.Abs(Top - 700) < .1 && Left == savedLeft, "Fall lands flush with the bottom edge without horizontal movement");
         BeginAnimation(TopProperty, null); Top = savedTop; taskbarTarget = null; taskbarClearSamples = 0;
         StopAlerts(); HideBubble(true); dropTracker.Reset();
         // Keep this diagnostic independent of physical pointer state during its awaits.
