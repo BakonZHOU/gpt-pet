@@ -11,8 +11,13 @@ let root = URL(fileURLWithPath: argument("--plugin-root") ?? URL(fileURLWithPath
 if CommandLine.arguments.contains("--self-test") {
     let fixture: [String: Any] = ["rateLimitsByLimitId": ["codex": ["primary": ["windowDurationMins": 300, "usedPercent": 24.0, "resetsAt": 2_000_000_000], "secondary": ["windowDurationMins": 10080, "usedPercent": 26.0, "resetsAt": 2_000_000_100]]], "rateLimitResetCredits": ["availableCount": 2]]
     let value = QuotaClient.parse(fixture)
-    guard value.fiveHour.remaining == 76, value.weekly.remaining == 74, value.resetCount == 2,
-          PetSkin.all.map(\.name) == ["欧鲸鲸", "若叶睦", "龙娘"] else { exit(1) }
+    let names = PetSkin.all.map(\.name)
+    guard abs((value.fiveHour.remaining ?? -1) - 76) < 0.001,
+          abs((value.weekly.remaining ?? -1) - 74) < 0.001,
+          value.resetCount == 2, names == ["欧鲸鲸", "若叶睦", "龙娘"] else {
+        fputs("FAIL five=\(String(describing: value.fiveHour.remaining)) week=\(String(describing: value.weekly.remaining)) resets=\(String(describing: value.resetCount)) names=\(names)\n", stderr)
+        exit(1)
+    }
     print("PASS macOS quota parser, skin names and version 0.4.0")
 } else if CommandLine.arguments.contains("--mcp") {
     PluginMCP.run(pluginRoot: root)

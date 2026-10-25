@@ -95,7 +95,7 @@ final class QuotaClient {
         if let pools = result["rateLimitsByLimitId"] as? [String: Any] { bucket = pools["codex"] as? [String: Any] }
         if bucket == nil { bucket = result["rateLimits"] as? [String: Any] }
         for key in ["primary", "secondary"] {
-            guard let window = bucket?[key] as? [String: Any], let minutes = window["windowDurationMins"] as? Int else { continue }
+            guard let window = bucket?[key] as? [String: Any], let minutes = (window["windowDurationMins"] as? NSNumber)?.intValue else { continue }
             let used = (window["usedPercent"] as? NSNumber)?.doubleValue
             let reset = (window["resetsAt"] as? NSNumber).map { Date(timeIntervalSince1970: $0.doubleValue) }
             let parsed = QuotaWindow(remaining: used.map { min(100, max(0, 100 - $0)) }, resetsAt: reset)
