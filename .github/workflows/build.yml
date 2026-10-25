@@ -1,5 +1,7 @@
 name: Build native pet plugin
 on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: write
 jobs:
   windows:
     runs-on: windows-latest
@@ -20,7 +22,63 @@ jobs:
         run: ./package.ps1 -ReuseBuild
       - uses: actions/upload-artifact@v4
         with:
-          name: plugin-windows-x64
+          name: plugin-windows-x64-${{ github.sha }}
           path: |
             artifacts/*.zip
             artifacts/*.sha256
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - run: chmod +x ./build-macos.sh ./package-macos.sh
+      - run: ./build-macos.sh
+      - run: ./macos-native/CodexPetPlugin --self-test
+      - run: python3 ./tests/mcp-smoke-macos.py
+      - run: ./package-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-macos-universal-${{ github.sha }}
+          path: |
+            artifacts/*.zip
+            artifacts/*.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-macos-stage-${{ github.sha }}
+          include-hidden-files: true
+          path: artifacts/plugin-0.4.0-macos/
+  commit-macos-stage:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/plugin' && !contains(github.event.head_commit.message, '[skip ci]')
+    needs: macos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: plugin
+      - uses: actions/download-artifact@v4
+        with:
+          name: plugin-macos-stage-${{ github.sha }}
+          path: artifacts/plugin-0.4.0-macos
+      - run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -f artifacts/plugin-0.4.0-macos
+          git diff --cached --quiet || git commit -m "build: add macOS 0.4.0 plugin artifact [skip ci]"
+          git push origin HEAD:plugin
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: plugin-*-universal-${{ github.sha }}
+          path: release
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: plugin-windows-x64-${{ github.sha }}
+          path: release
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" release/* --repo "${GITHUB_REPOSITORY}" --generate-notes

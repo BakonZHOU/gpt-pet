@@ -1,6 +1,6 @@
 # 移植经验与后续开发
 
-本文记录桌面版移植为 GPT/Codex 本地插件浮窗时的关键结论，以及以后修改、测试和发布的固定流程。当前基线为插件版 `v0.3.9`。
+本文记录桌面版移植为 GPT/Codex 本地插件浮窗时的关键结论，以及以后修改、测试和发布的固定流程。当前 Windows/macOS 双平台基线为 `v0.4.0`。
 
 ## 1. 最终架构
 
@@ -140,4 +140,4 @@ codex plugin add codex-pet-app@bakon-gpt-pet
 
 ## 6. 发布边界
 
-本仓库提供的是符合本地 MCP 插件结构的 Windows x64 包。进入 OpenAI 官方公开插件目录仍需要相应审核、身份验证或合作伙伴资格；GitHub release 不等同于已经在官方商店上架。
+本仓库提供符合本地 MCP 插件结构的 Windows x64 与 macOS universal 包。进入 OpenAI 官方公开插件目录仍需要相应审核、身份验证或合作伙伴资格；GitHub release 不等同于已经在官方商店上架。

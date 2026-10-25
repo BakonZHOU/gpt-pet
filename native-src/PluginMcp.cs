@@ -84,7 +84,7 @@ public static class PluginMcp
                 if (method == "initialize")
                 {
                     bool launched = EnsureRunning(false);
-                    result = new { protocolVersion = request.GetProperty("params").GetProperty("protocolVersion").GetString(), serverInfo = new { name = "codex-pet-plugin", version = "0.3.9" }, capabilities = new { tools = new { } } };
+                    result = new { protocolVersion = request.GetProperty("params").GetProperty("protocolVersion").GetString(), serverInfo = new { name = "codex-pet-plugin", version = "0.4.0" }, capabilities = new { tools = new { } } };
                 }
                 else if (method == "ping") result = new { };
                 else if (method == "tools/list") result = new { tools = new object[] {

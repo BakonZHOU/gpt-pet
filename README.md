@@ -1,14 +1,14 @@
-# 额度伙伴 · 插件浮窗 v0.3.9
+# 额度伙伴 · 插件浮窗 v0.4.0
 
 长按人物：初始按压动画结束再持续 1 秒进入蓄力，用鼠标调整红色箭头方向，松开发射。持续按住 15 秒满蓄力；飞行带重力、旋转和最多 8 次衰减反弹，落地停留 2 秒后自动回正并回到右下角，发射后的完整流程少于 8 秒。
 
-Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装器、Node或另行安装.NET。GPT加载启用插件的MCP服务时启动桌面浮窗；不需要打开“额度伙伴”面板。
+Windows x64 与 macOS 13+ 本地MCP插件，自带桌宠运行程序，无需软件安装器。GPT加载启用插件的MCP服务时启动桌面浮窗；不需要打开“额度伙伴”面板。
 
 ## 操作
 
-右键人物打开原版设置。点击依次显示额度、重置次数或概率语录、隐藏气泡。三套皮肤、配套主题气泡、原版音效、呼吸和呆毛0.1–6秒、每1%提醒、拖动与任务栏避让保持原样。按下音效在松开、拖动或失去捕获时立即停止，连续点击不会叠音。隐藏和退出仍在人物右键菜单内。
+右键人物打开原版设置。点击依次显示额度、重置次数或概率语录、隐藏气泡。三套皮肤为欧鲸鲸、若叶睦、龙娘；配套主题气泡、原版音效、呼吸和呆毛0.1–6秒、每1%提醒、拖动与任务栏或Dock避让保持原样。按下音效在松开、拖动或失去捕获时立即停止，连续点击不会叠音。隐藏和退出仍在人物右键菜单内。
 
-每套皮肤使用独立语料文件：鲸鱼娘为 DeepSeek 梗、GPT娘白龙为 GPT/AI 梗、若叶睦为 MyGO/Ave Mujica 梗。切换皮肤后“编辑语录”会打开对应文件。5小时额度为0%时，第二次点击固定显示当前语料中以“区”开头的句子。
+每套皮肤使用独立语料文件：欧鲸鲸为 DeepSeek 梗、龙娘为 GPT/AI 梗、若叶睦为 MyGO/Ave Mujica 梗。切换皮肤后“编辑语录”会打开对应文件。5小时额度为0%时，第二次点击固定显示当前语料中以“区”开头的句子。
 
 ## 独立运行与退出
 
@@ -30,16 +30,23 @@ Windows x64本地MCP插件，自带桌宠与.NET运行时，无需软件安装�
 
 ### 发给别人安装
 
-对方使用 Windows 版 GPT/Codex，在终端执行：
+Windows 用户执行：
 
 ```powershell
 codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin
 codex plugin add codex-pet-app@bakon-gpt-pet
 ```
 
+macOS 用户执行：
+
+```bash
+codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin
+codex plugin add codex-pet-app-macos@bakon-gpt-pet
+```
+
 然后重开 GPT。也可以只执行第一条命令，重开 GPT 后在“插件目录”选择 `Bakon GPT Pet` 来源，安装并启用“额度伙伴 · 插件浮窗”。这属于官方支持的 Git 市场安装方式，不需要桌面软件安装器。更新时执行 `codex plugin marketplace upgrade bakon-gpt-pet`，再在插件目录更新；如果宿主尚未重载，重开 GPT。
 
-开发者在Windows x64运行 `./build.ps1`，然后使用生成的 `artifacts/plugin-0.3.9` 安装测试。`./package.ps1 -ReuseBuild` 生成ZIP，plugin.json直接位于ZIP根目录。接收者无需运行独立软件安装器。
+开发者在Windows x64运行 `./build.ps1`；macOS运行 `./build-macos.sh`。两个平台均为0.4.0，`package.ps1` 与 `package-macos.sh` 生成各自ZIP，plugin.json直接位于ZIP根目录。
 
 发布版可以作为 Codex Git 市场安装：`codex plugin marketplace add BakonZHOU/gpt-pet --ref plugin`，再安装 `codex-pet-app@local-whale-pet`。桌宠右键的「检查更新」会先用 Codex 原生命令刷新市场并比较版本；相同版本不重复安装，发现新版则在 GPT 关闭、文件锁释放后自动调用原生安装命令。
 
