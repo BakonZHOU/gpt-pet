@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${PLUGIN_ROOT}/native/CodexPetPlugin\" --launch --plugin-root \"${PLUGIN_ROOT}\"",
+            "statusMessage": "正在启动额度伙伴"
+          }
+        ]
+      }
+    ]
+  }
+}
